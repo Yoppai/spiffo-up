@@ -11,6 +11,8 @@ export interface LocalBootstrapResult {
   seededDemoData: boolean;
 }
 
+let activeInventoryService: LocalInventoryService | null = null;
+
 export function seedDemoServersIfEmpty(service: LocalInventoryService): boolean {
   if (service.listServers().length > 0) {
     return false;
@@ -31,8 +33,13 @@ export function hydrateStoresFromInventory(service: LocalInventoryService): void
 export function bootstrapLocalInventory(database = createDatabaseConnection()): LocalBootstrapResult {
   installBaseSchema(database);
   const service = new LocalInventoryService(database);
+  activeInventoryService = service;
   const seededDemoData = seedDemoServersIfEmpty(service);
   hydrateStoresFromInventory(service);
 
   return { database, service, seededDemoData };
+}
+
+export function getLocalInventoryService(): LocalInventoryService | null {
+  return activeInventoryService;
 }

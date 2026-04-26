@@ -6,7 +6,8 @@ import { useAppStore } from '../../stores/app-store.js';
 import { usePendingChangesStore } from '../../stores/pending-changes-store.js';
 import { useServersStore } from '../../stores/servers-store.js';
 import type { ServerMenuItem, ServerRecord } from '../../types/index.js';
-import { formatServerPlayers, formatServerStatus, isActiveServer } from '../../lib/index.js';
+import { countPendingChangesByPanel, formatServerPlayers, formatServerStatus, isActiveServer } from '../../lib/index.js';
+import { ApplyPendingChangesModal } from '../../components/pending-changes-modal.js';
 
 export const serverMenuItems: ServerMenuItem[] = [
   { id: 'server-management', icon: '🖥', label: 'Server Management' },
@@ -26,26 +27,33 @@ export const ServerDashboard: React.FC = () => {
   const navigation = useInkStore(useAppStore, (state) => state.navigation);
   const servers = useInkStore(useServersStore, (state) => state.servers);
   const selectedServerId = useInkStore(useServersStore, (state) => state.selectedServerId);
-  const pendingChanges = useInkStore(usePendingChangesStore, (state) => state.changes.length);
+  const changes = useInkStore(usePendingChangesStore, (state) => state.changes);
+  const pendingChanges = changes.length;
   const selectedServer = servers.find((server) => server.id === selectedServerId);
   const activeServers = servers.filter(isActiveServer);
   const selectedMenu = serverMenuItems[navigation.serverMenuIndex] ?? serverMenuItems[0]!;
+  const panelCounts = countPendingChangesByPanel(changes);
+  const modal = useInkStore(useAppStore, (state) => state.pendingChangesModal);
+  const items = serverMenuItems.map((item) => ({ ...item, label: panelCounts[item.id] ? `${item.label} •` : item.label }));
 
   return (
-    <LayoutShell
-      leftTitle={selectedServer?.name ?? 'Server'}
-      rightTitle={selectedMenu.label}
-      focusedPanel={navigation.focusedPanel}
-      activeServers={activeServers.length}
-      totalServers={servers.length}
-      pendingChangesCount={pendingChanges}
-      left={<SelectableMenu items={serverMenuItems} selectedIndex={navigation.serverMenuIndex} />}
-      right={<ServerContent selectedMenu={selectedMenu} server={selectedServer} />}
-    />
+    <>
+      <LayoutShell
+        leftTitle={selectedServer?.name ?? 'Server'}
+        rightTitle={selectedMenu.label}
+        focusedPanel={navigation.focusedPanel}
+        activeServers={activeServers.length}
+        totalServers={servers.length}
+        pendingChangesCount={pendingChanges}
+        left={<SelectableMenu items={items} selectedIndex={navigation.serverMenuIndex} />}
+        right={<ServerContent selectedMenu={selectedMenu} server={selectedServer} pendingChangesCount={pendingChanges} />}
+      />
+      {modal.isOpen ? <ApplyPendingChangesModal /> : null}
+    </>
   );
 };
 
-const ServerContent: React.FC<{ selectedMenu: ServerMenuItem; server?: ServerRecord }> = ({ selectedMenu, server }) => {
+const ServerContent: React.FC<{ selectedMenu: ServerMenuItem; server?: ServerRecord; pendingChangesCount: number }> = ({ selectedMenu, server, pendingChangesCount }) => {
   if (!server) {
     return <Text color="yellow">No hay servidor seleccionado.</Text>;
   }
@@ -53,6 +61,7 @@ const ServerContent: React.FC<{ selectedMenu: ServerMenuItem; server?: ServerRec
   if (selectedMenu.id !== 'server-management') {
     return (
       <Box flexDirection="column">
+        {pendingChangesCount > 0 ? <PendingChangesBanner count={pendingChangesCount} /> : null}
         <Text color="yellow">Preview</Text>
         <Text>{selectedMenu.label} se implementará en un cambio futuro.</Text>
       </Box>
@@ -61,12 +70,20 @@ const ServerContent: React.FC<{ selectedMenu: ServerMenuItem; server?: ServerRec
 
   return (
     <Box flexDirection="column">
+      {pendingChangesCount > 0 ? <PendingChangesBanner count={pendingChangesCount} /> : null}
       <Text>Status:   {formatServerStatus(server)}</Text>
       <Text>IP:       {server.publicIp ?? '-'}</Text>
       <Text>Branch:   {server.branch}</Text>
       <Text>Players:  {formatServerPlayers(server)}</Text>
       <Text> </Text>
+      {pendingChangesCount > 0 ? <Text color="cyan">Apply All Changes ({pendingChangesCount})</Text> : null}
       <Text color="cyan">&gt;[🚀] Deploy    [⏹] Stop    [🔄] Update    [📦] Archive</Text>
     </Box>
   );
 };
+
+const PendingChangesBanner: React.FC<{ count: number }> = ({ count }) => (
+  <Box borderStyle="round" borderColor="yellow" paddingX={1} marginBottom={1}>
+    <Text color="yellow">{count} pending changes · Press Ctrl+A to apply</Text>
+  </Box>
+);

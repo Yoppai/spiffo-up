@@ -1,4 +1,4 @@
-import type { BackupRecord, PendingChange, PersistedSettings, Provider, ServerRecord, ServerStatus } from '../types/index.js';
+import type { BackupRecord, EncryptedPendingValue, PendingChange, PendingChangeCategory, PersistedSettings, Provider, ServerRecord, ServerStatus } from '../types/index.js';
 
 export interface ServerRow {
   id: string;
@@ -27,11 +27,14 @@ export interface PendingChangeRow {
   id: string;
   label: string;
   scope: PendingChange['scope'];
+  category?: PendingChangeCategory | null;
   server_id: string | null;
   panel: string | null;
   field: string | null;
   old_value: string | null;
   new_value: string | null;
+  is_sensitive?: number | null;
+  encrypted_value?: string | null;
   requires_restart: number;
   requires_vm_recreate: number;
   created_at: string;
@@ -103,29 +106,66 @@ export const pendingChangeRowToDomain = (row: PendingChangeRow): PendingChange =
   id: row.id,
   label: row.label,
   scope: row.scope,
+  category: normalizePendingChangeCategory(row.category),
   serverId: row.server_id,
   panel: row.panel,
   field: row.field,
-  oldValue: row.old_value,
-  newValue: row.new_value,
+  oldValue: row.is_sensitive === 1 ? '[changed]' : row.old_value,
+  newValue: row.is_sensitive === 1 ? '[changed]' : row.new_value,
+  sensitive: row.is_sensitive === 1,
+  encryptedValue: parseEncryptedValue(row.encrypted_value),
   requiresRestart: row.requires_restart === 1,
   requiresVmRecreate: row.requires_vm_recreate === 1,
   createdAt: row.created_at,
 });
 
-export const pendingChangeDomainToRow = (change: PendingChange): PendingChangeRow => ({
-  id: change.id,
-  label: change.label,
-  scope: change.scope,
-  server_id: change.serverId ?? null,
-  panel: change.panel ?? null,
-  field: change.field ?? null,
-  old_value: change.oldValue ?? null,
-  new_value: change.newValue ?? null,
-  requires_restart: change.requiresRestart ? 1 : 0,
-  requires_vm_recreate: change.requiresVmRecreate ? 1 : 0,
-  created_at: change.createdAt ?? new Date().toISOString(),
-});
+export const pendingChangeDomainToRow = (change: PendingChange): PendingChangeRow => {
+  assertSafePendingChangeForPersistence(change);
+
+  return {
+    id: change.id,
+    label: change.label,
+    scope: change.scope,
+    category: change.category ?? 'env',
+    server_id: change.serverId ?? null,
+    panel: change.panel ?? null,
+    field: change.field ?? null,
+    old_value: change.sensitive ? null : (change.oldValue ?? null),
+    new_value: change.sensitive ? null : (change.newValue ?? null),
+    is_sensitive: change.sensitive ? 1 : 0,
+    encrypted_value: change.encryptedValue ? JSON.stringify(change.encryptedValue) : null,
+    requires_restart: change.requiresRestart ? 1 : 0,
+    requires_vm_recreate: change.requiresVmRecreate ? 1 : 0,
+    created_at: change.createdAt ?? new Date().toISOString(),
+  };
+};
+
+export function assertSafePendingChangeForPersistence(change: PendingChange): void {
+  if (change.sensitive && !change.encryptedValue) {
+    throw new Error('Sensitive pending changes require encrypted payload before persistence');
+  }
+}
+
+function normalizePendingChangeCategory(category: PendingChangeCategory | null | undefined): PendingChangeCategory {
+  if (category === 'infrastructure' || category === 'build' || category === 'env' || category === 'ini-lua') {
+    return category;
+  }
+
+  return 'env';
+}
+
+function parseEncryptedValue(value: string | null | undefined): EncryptedPendingValue | null {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(value) as EncryptedPendingValue;
+    return parsed.version === 1 && parsed.algorithm === 'aes-256-gcm' ? parsed : null;
+  } catch {
+    return null;
+  }
+}
 
 export const backupRowToDomain = (row: BackupRow): BackupRecord => ({
   id: row.id,

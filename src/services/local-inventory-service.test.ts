@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { createDatabaseConnection, installBaseSchema } from '../infrastructure/database.js';
+import { encryptPendingSecret } from '../lib/pending-change-crypto.js';
 import { backupDomainToRow, pendingChangeDomainToRow, serverDomainToRow } from './inventory-mappers.js';
 import { LocalInventoryService } from './local-inventory-service.js';
 
@@ -24,9 +25,9 @@ describe('local inventory service', () => {
     });
 
     expect(service.listServers()).toHaveLength(1);
-    expect(service.listServers()[0].instanceType).toBe('e2-standard-2');
-    expect(service.listServers()[0].staticIp).toBe('1.2.3.4');
-    expect(service.listServers()[0].branch).toBe('unstable');
+    expect(service.listServers()[0]!.instanceType).toBe('e2-standard-2');
+    expect(service.listServers()[0]!.staticIp).toBe('1.2.3.4');
+    expect(service.listServers()[0]!.branch).toBe('unstable');
 
     expect(service.getSettings()).toEqual({ locale: 'es', theme: 'dark', backupPath: '' });
     expect(service.updateSettings({ locale: 'en', backupPath: '/tmp/backups' })).toEqual({ locale: 'en', theme: 'dark', backupPath: '/tmp/backups' });
@@ -50,11 +51,14 @@ describe('local inventory service', () => {
         id: 'chg-1',
         label: 'restart',
         scope: 'server',
+        category: 'env',
         serverId: 'srv-1',
         panel: 'basic-settings',
         field: 'MaxPlayers',
         oldValue: '8',
         newValue: '16',
+        sensitive: false,
+        encryptedValue: null,
         requiresRestart: true,
         requiresVmRecreate: false,
         createdAt: '2026-01-01T00:00:00.000Z',
@@ -113,6 +117,8 @@ describe('inventory mappers', () => {
       status: 'complete',
       createdAt: '2026-01-03T00:00:00.000Z',
     })).toMatchObject({ server_id: 'srv-2', size_bytes: 1 });
-    expect(pendingChangeDomainToRow({ id: 'chg-2', label: 'save', scope: 'global' })).toMatchObject({ server_id: null, requires_restart: 0 });
+    expect(pendingChangeDomainToRow({ id: 'chg-2', label: 'save', scope: 'global' })).toMatchObject({ server_id: null, category: 'env', requires_restart: 0 });
+    expect(() => pendingChangeDomainToRow({ id: 'secret', label: 'password', scope: 'server', sensitive: true })).toThrow('Sensitive pending changes require encrypted payload');
+    expect(pendingChangeDomainToRow({ id: 'secret', label: 'password', scope: 'server', sensitive: true, encryptedValue: encryptPendingSecret('pw', 'session') })).toMatchObject({ old_value: null, new_value: null, is_sensitive: 1 });
   });
 });

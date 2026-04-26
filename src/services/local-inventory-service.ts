@@ -97,9 +97,9 @@ export class LocalInventoryService {
   addPendingChange(change: PendingChange): void {
     const row = pendingChangeDomainToRow(change);
     this.database.query(`
-      INSERT INTO pending_changes (id, label, scope, server_id, panel, field, old_value, new_value, requires_restart, requires_vm_recreate, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(row.id, row.label, row.scope, row.server_id, row.panel, row.field, row.old_value, row.new_value, row.requires_restart, row.requires_vm_recreate, row.created_at);
+      INSERT INTO pending_changes (id, label, scope, category, server_id, panel, field, old_value, new_value, is_sensitive, encrypted_value, requires_restart, requires_vm_recreate, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(row.id, row.label, row.scope, row.category ?? 'env', row.server_id, row.panel, row.field, row.old_value, row.new_value, row.is_sensitive ?? 0, row.encrypted_value ?? null, row.requires_restart, row.requires_vm_recreate, row.created_at);
   }
 
   listPendingChanges(): PendingChange[] {
