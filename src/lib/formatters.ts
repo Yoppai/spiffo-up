@@ -9,6 +9,7 @@ export function formatServerStatus(server: ServerRecord): string {
   if (server.status === 'provisioning') return '⚠️ INICIANDO';
   if (server.status === 'stopped') return '❌ DETENIDO';
   if (server.status === 'error') return '❌ ERROR';
+  if (server.status === 'archived') return '📦 ARCHIVADO';
   return '📝 DRAFT';
 }
 
