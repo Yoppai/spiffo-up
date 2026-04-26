@@ -47,6 +47,10 @@ El sistema SHALL definir stores Zustand granulares para dominios globales distin
 - **WHEN** una pantalla agrega cambios pendientes para aplicar luego con `Ctrl+A`
 - **THEN** esos cambios pertenecen al pending changes store y no a dirty state local por panel
 
+#### Scenario: Modal global separado de datos del buffer
+- **WHEN** se abre o cierra el modal de pending changes
+- **THEN** el estado de visibilidad y selección del modal pertenece al estado global de app, mientras los cambios pendientes permanecen en el pending changes store
+
 ### Requirement: Hook compatible con Ink para Zustand
 El sistema SHALL exponer un hook `useInkStore` para que componentes Ink lean stores Zustand de forma compatible con re-rendering en terminal.
 
