@@ -1,0 +1,28 @@
+schema: spec-driven
+context: |
+  Language: Spanish
+  Write in Spanish, but:
+  - Keep technical terms like "API", "REST", "GraphQL" in English
+  - Code examples and file paths remain in English
+  
+  Tech stack:
+  - Runtime/package manager: Bun
+  - Language: TypeScript (ES modules)
+  - UI: React 19 + Ink 7 for CLI/TUI rendering
+  - State management: Zustand
+  - Routing: react-router
+  - Validation/config parsing: Zod + yaml
+  - Infrastructure/cloud: Pulumi + GCP
+  - Integrations: SSH/SFTP (ssh2, ssh2-sftp-client), RCON (rcon-client)
+  - Scheduling/time: cron-parser + cronstrue
+  - Internationalization: i18next + react-i18next
+  - Testing: bun test + ink-testing-library
+  - Build/compile: bun build targeting Node or compiled binary
+  
+  Rules:
+    proposal:
+       - Keep proposals under 1500 words
+       - Always include a "Non-goals" section
+    
+    tasks:
+       - Break tasks into chunks of max 2 hours
