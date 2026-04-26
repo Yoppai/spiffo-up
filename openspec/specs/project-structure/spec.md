@@ -18,7 +18,7 @@ El sistema SHALL organizar el código fuente bajo `src/` usando la arquitectura 
 - **THEN** el entrypoint raíz permanece compatible con `package.json` y delega la composición de la app a módulos bajo `src/cli/`
 
 ### Requirement: Boundaries de módulos
-El sistema SHALL separar componentes puros, estado global, lógica de negocio, wrappers técnicos, utilidades puras, tipos compartidos y locales en módulos distintos para evitar acoplamiento prematuro.
+El sistema SHALL separar componentes puros, estado global, lógica de negocio, wrappers técnicos, utilidades puras, tipos compartidos y locales en módulos distintos para evitar acoplamiento prematuro, incluyendo un boundary explícito para persistencia SQLite local.
 
 #### Scenario: UI pura separada de side effects
 - **WHEN** se agregan componentes reutilizables de Ink
@@ -31,6 +31,10 @@ El sistema SHALL separar componentes puros, estado global, lógica de negocio, w
 #### Scenario: Reglas puras testeables
 - **WHEN** se agregan validadores, formatters, paths o cálculos como RAM de JVM
 - **THEN** viven en `src/lib/` y pueden probarse sin Ink ni servicios remotos
+
+#### Scenario: Persistencia SQLite separada de UI
+- **WHEN** se agregan operaciones de inventario local persistente
+- **THEN** la conexión, schema y migraciones SQLite viven en `src/infrastructure/`, el CRUD/hydration vive en `src/services/`, y los componentes Ink no ejecutan queries SQL directamente
 
 ### Requirement: Stores globales granulares
 El sistema SHALL definir stores Zustand granulares para dominios globales distintos, incluyendo servidores, cambios pendientes, settings y estado global de app.
