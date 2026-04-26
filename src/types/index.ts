@@ -57,14 +57,69 @@ export interface PendingChange {
   id: string;
   label: string;
   scope: 'server' | 'settings' | 'global';
+  category?: PendingChangeCategory;
   serverId?: string | null;
   panel?: string | null;
   field?: string | null;
   oldValue?: string | null;
   newValue?: string | null;
+  sensitive?: boolean;
+  encryptedValue?: EncryptedPendingValue | null;
   requiresRestart?: boolean;
   requiresVmRecreate?: boolean;
   createdAt?: string;
+}
+
+export type PendingChangeCategory = 'env' | 'ini-lua' | 'build' | 'infrastructure';
+
+export interface EncryptedPendingValue {
+  version: 1;
+  algorithm: 'aes-256-gcm';
+  kdf: 'scrypt';
+  salt: string;
+  nonce: string;
+  authTag: string;
+  ciphertext: string;
+}
+
+export interface PendingChangesByPanel {
+  panel: string;
+  changes: PendingChange[];
+}
+
+export interface PendingChangesImpactSummary {
+  total: number;
+  categories: PendingChangeCategory[];
+  requiresRestart: boolean;
+  requiresVmRecreate: boolean;
+  pipeline: PendingChangeCategory[];
+}
+
+export type PendingChangesModalAction = 'apply' | 'discard' | 'back';
+
+export type PendingChangesModalMode = 'summary' | 'passphrase' | 'result';
+
+export interface PendingChangesModalState {
+  isOpen: boolean;
+  selectedAction: PendingChangesModalAction;
+  mode: PendingChangesModalMode;
+  passphraseInput: string;
+  error?: string | null;
+  resultMessage?: string | null;
+}
+
+export interface PendingChangeApplyStep {
+  category: PendingChangeCategory;
+  changeIds: string[];
+  label: string;
+  status: 'planned' | 'applied';
+}
+
+export interface PendingChangeApplyResult {
+  applied: boolean;
+  steps: PendingChangeApplyStep[];
+  impact: PendingChangesImpactSummary;
+  decryptedSecrets: number;
 }
 
 export interface AppSettings {

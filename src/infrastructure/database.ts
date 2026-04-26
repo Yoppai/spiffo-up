@@ -42,11 +42,14 @@ CREATE TABLE IF NOT EXISTS pending_changes (
   id TEXT PRIMARY KEY,
   label TEXT NOT NULL,
   scope TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT 'env' CHECK (category IN ('env', 'ini-lua', 'build', 'infrastructure')),
   server_id TEXT REFERENCES servers(id) ON DELETE CASCADE,
   panel TEXT,
   field TEXT,
   old_value TEXT,
   new_value TEXT,
+  is_sensitive INTEGER NOT NULL DEFAULT 0,
+  encrypted_value TEXT,
   requires_restart INTEGER NOT NULL DEFAULT 0,
   requires_vm_recreate INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -78,6 +81,7 @@ export function createDatabaseConnection(path = DEFAULT_DB_PATH): DatabaseConnec
 
 export function installBaseSchema(database: DatabaseConnection): void {
   database.exec(SCHEMA);
+  ensurePendingChangesColumns(database);
 }
 
 export function getDefaultDatabasePath(): string {
@@ -93,5 +97,23 @@ function applyPragmas(database: DatabaseConnection, path: string): void {
 
   if (path !== ':memory:') {
     database.exec('PRAGMA journal_mode = WAL;');
+  }
+}
+
+function ensurePendingChangesColumns(database: DatabaseConnection): void {
+  const columns = new Set(
+    (database.query('PRAGMA table_info(pending_changes)').all() as Array<{ name: string }>).map((column) => column.name),
+  );
+
+  const migrations: Array<[string, string]> = [
+    ['category', "ALTER TABLE pending_changes ADD COLUMN category TEXT NOT NULL DEFAULT 'env'"],
+    ['is_sensitive', 'ALTER TABLE pending_changes ADD COLUMN is_sensitive INTEGER NOT NULL DEFAULT 0'],
+    ['encrypted_value', 'ALTER TABLE pending_changes ADD COLUMN encrypted_value TEXT'],
+  ];
+
+  for (const [column, statement] of migrations) {
+    if (!columns.has(column)) {
+      database.exec(statement);
+    }
   }
 }
