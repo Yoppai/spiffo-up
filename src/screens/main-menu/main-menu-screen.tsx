@@ -5,6 +5,7 @@ import { useAppStore } from '../../stores/app-store.js';
 import { useServersStore } from '../../stores/servers-store.js';
 import { MainMenuView, globalMenuItems } from './main-menu-view.js';
 import { ServerDashboard, serverMenuItems } from '../server-dashboard/server-dashboard-screen.js';
+import { handleDashboardPanelInput } from '../server-dashboard/dashboard-panels.js';
 import { PendingChangeDecryptError, isActiveServer } from '../../lib/index.js';
 import type { NavigationState, ServerRecord } from '../../types/index.js';
 import { usePendingChangesStore } from '../../stores/pending-changes-store.js';
@@ -32,7 +33,7 @@ export const DashboardScreen: React.FC = () => {
     if (key.tab) return app.toggleFocusedPanel();
 
     if (navigation.mode === 'server') {
-      return handleServerInput({ app, input, key, navigation, pendingChangesCount: pendingStore.changes.length });
+      return handleServerInput({ app, input, key, navigation, pendingChangesCount: pendingStore.changes.length, pendingStore });
     }
 
     return handleGlobalInput({ app, key, navigation, activeServers, serverStore });
@@ -85,12 +86,14 @@ function handleServerInput({
   key,
   navigation,
   pendingChangesCount,
+  pendingStore,
 }: {
   app: ReturnType<typeof useAppStore.getState>;
   input: string;
-  key: { upArrow?: boolean; downArrow?: boolean; escape?: boolean; return?: boolean; ctrl?: boolean };
+  key: { upArrow?: boolean; downArrow?: boolean; leftArrow?: boolean; rightArrow?: boolean; escape?: boolean; return?: boolean; ctrl?: boolean; backspace?: boolean; delete?: boolean };
   navigation: NavigationState;
   pendingChangesCount: number;
+  pendingStore: ReturnType<typeof usePendingChangesStore.getState>;
 }) {
   if ((input === '\u0001' || (key.ctrl && input.toLowerCase() === 'a')) && pendingChangesCount > 0) {
     app.openPendingChangesModal();
@@ -107,6 +110,12 @@ function handleServerInput({
   }
 
   if (navigation.focusedPanel !== 'left') {
+    const serverStore = useServersStore.getState();
+    const server = serverStore.servers.find((candidate) => candidate.id === serverStore.selectedServerId);
+    const selectedPanel = serverMenuItems[navigation.serverMenuIndex]?.id;
+    if (server && selectedPanel) {
+      handleDashboardPanelInput({ app, pendingStore, input, key, server, panel: selectedPanel });
+    }
     return;
   }
 

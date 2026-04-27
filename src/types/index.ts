@@ -152,3 +152,15 @@ export interface NavigationState {
   serverMenuIndex: number;
   activeServersCursor: number;
 }
+
+export type DashboardSubView = 'main' | 'confirm' | 'details' | 'edit';
+
+export interface DashboardPanelUiState {
+  rightCursor: number;
+  rightActionCursor: number;
+  subView: DashboardSubView;
+  drafts: Record<string, string>;
+  validationErrors: Record<string, string>;
+  statusMessage?: string | null;
+  confirmAction?: string | null;
+}
