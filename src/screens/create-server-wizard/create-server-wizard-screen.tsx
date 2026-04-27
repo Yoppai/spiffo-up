@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Text } from 'ink';
 import { LayoutShell } from '../../components/index.js';
 import { useInkStore } from '../../hooks/use-ink-store.js';
-import { isActiveServer } from '../../lib/index.js';
+import { filteredInstanceCategories, formatGcpLatency, isActiveServer, recommendInstanceForMaxPlayers } from '../../lib/index.js';
 import { useAppStore } from '../../stores/app-store.js';
 import { usePendingChangesStore } from '../../stores/pending-changes-store.js';
 import { useServersStore } from '../../stores/servers-store.js';
@@ -166,30 +166,33 @@ function ServerNameStep({ wizard }: { wizard: CreateServerWizardState }) {
 
 function RegionStep({ wizard }: { wizard: CreateServerWizardState }) {
   const selectedRegion = gcpRegions[wizard.regionCursor] ?? gcpRegions[0]!;
+  const selectedZone = selectedRegion.zones[wizard.zoneCursor] ?? selectedRegion.zones[0];
   return (
     <Box flexDirection="column">
-      <Text>GCP regions/zones · latency placeholder</Text>
+      <Text>GCP zones by continent · latency measured/fallback</Text>
       {gcpRegions.map((region, index) => (
         <Text key={region.id} color={wizard.regionCursor === index ? 'cyan' : undefined} inverse={wizard.regionCursor === index}>
-          {wizard.regionCursor === index ? '>' : ' '} {region.label} · {region.location}
+          {wizard.regionCursor === index ? '>' : ' '} {region.continent ?? 'gcp'} · {region.label} · {region.location}
         </Text>
       ))}
-      <Text>Zone: {selectedRegion.zones[wizard.zoneCursor]?.label ?? selectedRegion.zones[0]?.label} · {selectedRegion.zones[wizard.zoneCursor]?.latencyLabel ?? 'mock latency'}</Text>
+      <Text>Zone: {selectedZone?.label ?? '-'} · {selectedZone?.latencyLabel ?? formatGcpLatency(undefined)}</Text>
       <ActionRow actions={STEP_ACTIONS} cursor={wizard.actionCursor} />
     </Box>
   );
 }
 
 function InstanceStep({ wizard }: { wizard: CreateServerWizardState }) {
+  const recommendation = recommendInstanceForMaxPlayers(null);
   return (
     <Box flexDirection="column">
-      <Text>Curated Project Zomboid tiers</Text>
+      <Text>Curated Project Zomboid tiers · estimated local pricing</Text>
       {instanceTiers.map((tier, index) => (
         <Text key={tier.id} color={wizard.instanceCursor === index ? 'cyan' : undefined} inverse={wizard.instanceCursor === index}>
-          {wizard.instanceCursor === index ? '>' : ' '} {tier.label}: {tier.instanceType} · {tier.vcpu} vCPU · {tier.ramGb}GB RAM · JVM {tier.jvmMemory} · {tier.estimatedMonthlyCost}
+          {wizard.instanceCursor === index ? '>' : ' '} {tier.label}: {tier.instanceType} · {tier.vcpu} vCPU · {tier.ramGb}GB RAM · JVM {tier.jvmMemory} · {tier.estimatedHourlyCost} · {tier.estimatedMonthlyCost}{tier.instanceType === recommendation.instanceType ? ' · Recommended' : ''}
         </Text>
       ))}
       <Text dimColor>{instanceTiers[wizard.instanceCursor]?.playerGuidance}</Text>
+      <Text dimColor>Advanced catalog: {filteredInstanceCategories.map((category) => category.label).join(', ')}</Text>
       <ActionRow actions={STEP_ACTIONS} cursor={wizard.actionCursor} />
     </Box>
   );

@@ -1,5 +1,6 @@
 import type { CreateServerWizardDraft, ServerRecord } from '../types/index.js';
-import { gcpRegions, instanceTiers } from '../screens/create-server-wizard/catalog.js';
+import { gcpRegions } from '../screens/create-server-wizard/catalog.js';
+import { isValidGcpGameServerInstance } from '../lib/gcp-catalog.js';
 import type { LocalInventoryService } from './local-inventory-service.js';
 
 export function buildDraftServerFromWizard(draft: CreateServerWizardDraft, existingServers: ReadonlyArray<ServerRecord> = []): ServerRecord {
@@ -37,7 +38,7 @@ export function validateWizardDraft(draft: CreateServerWizardDraft): void {
   const region = gcpRegions.find((candidate) => candidate.id === draft.region);
   if (!region) throw new Error('Selected GCP region is not in the local catalog.');
   if (!region.zones.some((zone) => zone.id === draft.zone)) throw new Error('Selected GCP zone is not in the local catalog.');
-  if (!instanceTiers.some((tier) => tier.instanceType === draft.instanceType)) throw new Error('Selected instance type is not in the local catalog.');
+  if (!isValidGcpGameServerInstance(draft.instanceType)) throw new Error('Selected instance type is not in the local catalog.');
 }
 
 export function validateWizardServerName(name: string): string | null {

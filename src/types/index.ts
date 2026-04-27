@@ -164,11 +164,16 @@ export interface GcpZoneOption {
   id: string;
   label: string;
   latencyLabel: string;
+  continent?: string;
+  location?: string;
+  endpointUrl?: string;
+  fallbackLatencyMs?: number;
 }
 
 export interface GcpRegionOption {
   id: string;
   label: string;
+  continent?: string;
   location: string;
   zones: GcpZoneOption[];
 }
@@ -181,7 +186,9 @@ export interface InstanceTierOption {
   ramGb: number;
   jvmMemory: string;
   estimatedMonthlyCost: string;
+  estimatedHourlyCost?: string;
   playerGuidance: string;
+  recommended?: boolean;
 }
 
 export interface CreateServerWizardDraft {
