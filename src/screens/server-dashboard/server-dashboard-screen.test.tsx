@@ -28,7 +28,7 @@ describe('server dashboard panels', () => {
     const baseUi = { rightCursor: 0, rightActionCursor: 0, subView: 'main', drafts: {}, validationErrors: {}, statusMessage: null, confirmAction: null };
     const checks: Array<[string, string[], ReturnType<typeof getPanelUi>]> = [
       ['server-management', ['Mock adapter ready', 'Apply All Changes'], baseUi],
-      ['provider-region', ['Provider: GCP MVP', 'Estimated cost:'], baseUi],
+      ['provider-region', ['Provider: GCP MVP', 'Estimated cost:', 'Recommendation: Balanced · n2d-standard-4'], baseUi],
       ['build', ['Current branch:', 'Image tag:'], baseUi],
       ['players', ['Connected players · Mock', 'Ana · admin'], baseUi],
       ['stats', ['Container metrics · Mock', 'Logs snapshot:'], baseUi],
@@ -68,6 +68,8 @@ describe('server dashboard panels', () => {
     const app = render(<DashboardScreen />);
 
     handleDashboardPanelInput({ app: useAppStore.getState(), pendingStore: usePendingChangesStore.getState(), input: '', key: { return: true }, server, panel: 'provider-region' });
+    useAppStore.getState().patchDashboardPanelUi('provider-region', { rightCursor: 1 });
+    handleDashboardPanelInput({ app: useAppStore.getState(), pendingStore: usePendingChangesStore.getState(), input: '', key: { return: true }, server, panel: 'provider-region' });
     useAppStore.getState().patchDashboardPanelUi('build', { rightCursor: 0 });
     handleDashboardPanelInput({ app: useAppStore.getState(), pendingStore: usePendingChangesStore.getState(), input: '', key: { return: true }, server, panel: 'build' });
     useAppStore.getState().patchDashboardPanelUi('basic-settings', { drafts: { serverName: 'main-2', publicName: 'main-2', description: 'Desc', serverPassword: 'secret', publicListing: 'false' }, rightCursor: 5 });
@@ -76,7 +78,8 @@ describe('server dashboard panels', () => {
     handleDashboardPanelInput({ app: useAppStore.getState(), pendingStore: usePendingChangesStore.getState(), input: '', key: { return: true }, server, panel: 'admins' });
 
     const changes = usePendingChangesStore.getState().changes;
-    expect(changes.some((change) => change.panel === 'provider-region')).toBe(true);
+    expect(changes.some((change) => change.panel === 'provider-region' && change.field === 'region' && change.requiresVmRecreate)).toBe(true);
+    expect(changes.some((change) => change.panel === 'provider-region' && change.field === 'instanceType' && change.requiresVmRecreate)).toBe(true);
     expect(changes.some((change) => change.panel === 'build' && change.field === 'branch')).toBe(true);
     expect(changes.filter((change) => change.panel === 'basic-settings').length).toBeGreaterThan(0);
     expect(changes.some((change) => change.panel === 'admins' && change.field === 'ADMIN_USERNAME')).toBe(true);
