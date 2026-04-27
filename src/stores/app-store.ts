@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { NavigationState, NavigationTarget, PanelFocus, PendingChangesModalAction, PendingChangesModalMode, PendingChangesModalState } from '../types/index.js';
+import type { DashboardPanelUiState, NavigationState, NavigationTarget, PanelFocus, PendingChangesModalAction, PendingChangesModalMode, PendingChangesModalState, ServerMenuId } from '../types/index.js';
 
 const ACTIVE_SERVERS_MENU_INDEX = 1;
 
@@ -23,9 +23,20 @@ const initialPendingChangesModal: PendingChangesModalState = {
   resultMessage: null,
 };
 
+const initialDashboardPanelUi: DashboardPanelUiState = {
+  rightCursor: 0,
+  rightActionCursor: 0,
+  subView: 'main',
+  drafts: {},
+  validationErrors: {},
+  statusMessage: null,
+  confirmAction: null,
+};
+
 interface AppState {
   navigation: NavigationState;
   pendingChangesModal: PendingChangesModalState;
+  dashboardPanels: Partial<Record<ServerMenuId, DashboardPanelUiState>>;
   setNavigationTarget: (target: NavigationTarget) => void;
   setFocusedPanel: (panel: PanelFocus) => void;
   toggleFocusedPanel: () => void;
@@ -42,12 +53,19 @@ interface AppState {
   setPendingChangesPassphraseInput: (passphraseInput: string) => void;
   setPendingChangesModalError: (error: string | null) => void;
   setPendingChangesModalResult: (resultMessage: string | null) => void;
+  getDashboardPanelUi: (panel: ServerMenuId) => DashboardPanelUiState;
+  patchDashboardPanelUi: (panel: ServerMenuId, patch: Partial<DashboardPanelUiState>) => void;
+  moveDashboardRightCursor: (panel: ServerMenuId, delta: number, itemCount: number) => void;
+  moveDashboardActionCursor: (panel: ServerMenuId, delta: number, itemCount: number) => void;
+  setDashboardDraft: (panel: ServerMenuId, field: string, value: string) => void;
+  resetDashboardPanelUi: (panel?: ServerMenuId) => void;
   resetNavigation: () => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
   navigation: initialNavigation,
   pendingChangesModal: initialPendingChangesModal,
+  dashboardPanels: {},
   setNavigationTarget: (current) => set((state) => ({ navigation: { ...state.navigation, current } })),
   setFocusedPanel: (focusedPanel) => set((state) => ({ navigation: { ...state.navigation, focusedPanel } })),
   toggleFocusedPanel: () =>
@@ -113,7 +131,55 @@ export const useAppStore = create<AppState>((set) => ({
   setPendingChangesPassphraseInput: (passphraseInput) => set((state) => ({ pendingChangesModal: { ...state.pendingChangesModal, passphraseInput } })),
   setPendingChangesModalError: (error) => set((state) => ({ pendingChangesModal: { ...state.pendingChangesModal, error } })),
   setPendingChangesModalResult: (resultMessage) => set((state) => ({ pendingChangesModal: { ...state.pendingChangesModal, mode: 'result', resultMessage, error: null } })),
-  resetNavigation: () => set({ navigation: initialNavigation, pendingChangesModal: initialPendingChangesModal }),
+  getDashboardPanelUi: (panel) => useAppStore.getState().dashboardPanels[panel] ?? initialDashboardPanelUi,
+  patchDashboardPanelUi: (panel, patch) =>
+    set((state) => ({
+      dashboardPanels: {
+        ...state.dashboardPanels,
+        [panel]: { ...(state.dashboardPanels[panel] ?? initialDashboardPanelUi), ...patch },
+      },
+    })),
+  moveDashboardRightCursor: (panel, delta, itemCount) =>
+    set((state) => {
+      const current = state.dashboardPanels[panel] ?? initialDashboardPanelUi;
+      return {
+        dashboardPanels: {
+          ...state.dashboardPanels,
+          [panel]: { ...current, rightCursor: wrapIndex(current.rightCursor + delta, itemCount), validationErrors: {} },
+        },
+      };
+    }),
+  moveDashboardActionCursor: (panel, delta, itemCount) =>
+    set((state) => {
+      const current = state.dashboardPanels[panel] ?? initialDashboardPanelUi;
+      return {
+        dashboardPanels: {
+          ...state.dashboardPanels,
+          [panel]: { ...current, rightActionCursor: wrapIndex(current.rightActionCursor + delta, itemCount), validationErrors: {} },
+        },
+      };
+    }),
+  setDashboardDraft: (panel, field, value) =>
+    set((state) => {
+      const current = state.dashboardPanels[panel] ?? initialDashboardPanelUi;
+      return {
+        dashboardPanels: {
+          ...state.dashboardPanels,
+          [panel]: { ...current, drafts: { ...current.drafts, [field]: value }, validationErrors: { ...current.validationErrors, [field]: '' } },
+        },
+      };
+    }),
+  resetDashboardPanelUi: (panel) =>
+    set((state) => {
+      if (!panel) {
+        return { dashboardPanels: {} };
+      }
+
+      const next = { ...state.dashboardPanels };
+      delete next[panel];
+      return { dashboardPanels: next };
+    }),
+  resetNavigation: () => set({ navigation: initialNavigation, pendingChangesModal: initialPendingChangesModal, dashboardPanels: {} }),
 }));
 
 function wrapIndex(index: number, length: number): number {
