@@ -3,6 +3,7 @@ import { useAppStore } from './app-store.js';
 import { usePendingChangesStore } from './pending-changes-store.js';
 import { seedServers, useServersStore } from './servers-store.js';
 import { useSettingsStore } from './settings-store.js';
+import { validateWizardServerName } from '../services/create-server-wizard-service.js';
 
 describe('stores', () => {
   afterEach(() => {
@@ -71,5 +72,29 @@ describe('stores', () => {
       serverMenuIndex: 0,
       activeServersCursor: 0,
     });
+  });
+
+  it('opens, advances, goes back, and cancels the create server wizard', () => {
+    const app = useAppStore.getState();
+
+    app.openCreateServerWizard();
+    expect(useAppStore.getState().navigation.current).toBe('wizard');
+
+    expect(app.nextWizardStep()).toBe(true);
+    expect(useAppStore.getState().createServerWizard.stepIndex).toBe(1);
+
+    app.previousWizardStep();
+    expect(useAppStore.getState().createServerWizard.stepIndex).toBe(0);
+
+    app.cancelCreateServerWizard();
+    expect(useAppStore.getState().navigation.current).toBe('dashboard');
+    expect(useAppStore.getState().createServerWizard.stepIndex).toBe(0);
+  });
+
+  it('validates wizard server names', () => {
+    expect(validateWizardServerName('')).toBe('Server name is required.');
+    expect(validateWizardServerName('   ')).toBe('Server name is required.');
+    expect(validateWizardServerName('!!!')).toBe('Server name must include letters or numbers.');
+    expect(validateWizardServerName('good-name_1')).toBeNull();
   });
 });
