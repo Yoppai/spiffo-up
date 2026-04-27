@@ -27,6 +27,22 @@ CREATE TABLE IF NOT EXISTS servers (
   players_online INTEGER CHECK (players_online IS NULL OR players_online >= 0),
   players_max INTEGER CHECK (players_max IS NULL OR players_max >= 0),
   last_error TEXT,
+  project_id TEXT,
+  pulumi_stack_name TEXT,
+  pulumi_workspace_path TEXT,
+  game_port INTEGER CHECK (game_port IS NULL OR (game_port >= 30000 AND game_port <= 39999)),
+  query_port INTEGER CHECK (query_port IS NULL OR (query_port >= 30000 AND query_port <= 39999)),
+  rcon_port INTEGER CHECK (rcon_port IS NULL OR (rcon_port >= 40000 AND rcon_port <= 49999)),
+  public_rcon_enabled INTEGER NOT NULL DEFAULT 0,
+  allowed_rcon_cidrs TEXT,
+  rcon_unsafe INTEGER NOT NULL DEFAULT 0,
+  rcon_password TEXT,
+  last_deploy_started_at TEXT,
+  last_deploy_finished_at TEXT,
+  last_status_checked_at TEXT,
+  gcp_address_name TEXT,
+  gcp_instance_name TEXT,
+  gcp_firewall_tag TEXT,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -81,6 +97,7 @@ export function createDatabaseConnection(path = DEFAULT_DB_PATH): DatabaseConnec
 
 export function installBaseSchema(database: DatabaseConnection): void {
   database.exec(SCHEMA);
+  ensureServerInfrastructureColumns(database);
   ensurePendingChangesColumns(database);
 }
 
@@ -109,6 +126,37 @@ function ensurePendingChangesColumns(database: DatabaseConnection): void {
     ['category', "ALTER TABLE pending_changes ADD COLUMN category TEXT NOT NULL DEFAULT 'env'"],
     ['is_sensitive', 'ALTER TABLE pending_changes ADD COLUMN is_sensitive INTEGER NOT NULL DEFAULT 0'],
     ['encrypted_value', 'ALTER TABLE pending_changes ADD COLUMN encrypted_value TEXT'],
+  ];
+
+  for (const [column, statement] of migrations) {
+    if (!columns.has(column)) {
+      database.exec(statement);
+    }
+  }
+}
+
+function ensureServerInfrastructureColumns(database: DatabaseConnection): void {
+  const columns = new Set(
+    (database.query('PRAGMA table_info(servers)').all() as Array<{ name: string }>).map((column) => column.name),
+  );
+
+  const migrations: Array<[string, string]> = [
+    ['project_id', 'ALTER TABLE servers ADD COLUMN project_id TEXT'],
+    ['pulumi_stack_name', 'ALTER TABLE servers ADD COLUMN pulumi_stack_name TEXT'],
+    ['pulumi_workspace_path', 'ALTER TABLE servers ADD COLUMN pulumi_workspace_path TEXT'],
+    ['game_port', 'ALTER TABLE servers ADD COLUMN game_port INTEGER'],
+    ['query_port', 'ALTER TABLE servers ADD COLUMN query_port INTEGER'],
+    ['rcon_port', 'ALTER TABLE servers ADD COLUMN rcon_port INTEGER'],
+    ['public_rcon_enabled', 'ALTER TABLE servers ADD COLUMN public_rcon_enabled INTEGER NOT NULL DEFAULT 0'],
+    ['allowed_rcon_cidrs', 'ALTER TABLE servers ADD COLUMN allowed_rcon_cidrs TEXT'],
+    ['rcon_unsafe', 'ALTER TABLE servers ADD COLUMN rcon_unsafe INTEGER NOT NULL DEFAULT 0'],
+    ['rcon_password', 'ALTER TABLE servers ADD COLUMN rcon_password TEXT'],
+    ['last_deploy_started_at', 'ALTER TABLE servers ADD COLUMN last_deploy_started_at TEXT'],
+    ['last_deploy_finished_at', 'ALTER TABLE servers ADD COLUMN last_deploy_finished_at TEXT'],
+    ['last_status_checked_at', 'ALTER TABLE servers ADD COLUMN last_status_checked_at TEXT'],
+    ['gcp_address_name', 'ALTER TABLE servers ADD COLUMN gcp_address_name TEXT'],
+    ['gcp_instance_name', 'ALTER TABLE servers ADD COLUMN gcp_instance_name TEXT'],
+    ['gcp_firewall_tag', 'ALTER TABLE servers ADD COLUMN gcp_firewall_tag TEXT'],
   ];
 
   for (const [column, statement] of migrations) {

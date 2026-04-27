@@ -66,16 +66,20 @@ El sistema SHALL preparar archivos de locale para English y Español como base d
 - **THEN** existen archivos base para `en` y `es` bajo `src/locales/`
 
 ### Requirement: Sin comportamiento funcional prematuro
-El sistema SHALL limitar este cambio a estructura, layout TUI, navegación local y previews visuales, sin implementar flujos reales de deploy, infraestructura cloud, SSH, SFTP, RCON, backups o ejecución de acciones destructivas.
+El sistema SHALL permitir comportamiento funcional real solamente a través de servicios explícitos de infraestructura/lifecycle agregados para GCP, manteniendo estructura, layout, navegación y componentes UI libres de side effects directos.
 
-#### Scenario: No deploy real
+#### Scenario: No deploy real desde UI directa
 - **WHEN** se aplica este cambio
-- **THEN** no se crean recursos GCP, no se ejecuta Pulumi y no se intenta conectar por SSH/SFTP/RCON
+- **THEN** los componentes Ink no crean recursos GCP, no ejecutan Pulumi directamente y no abren conexiones SSH/SFTP/RCON por sí mismos
 
 #### Scenario: TUI base permitido
 - **WHEN** se aplica este cambio
-- **THEN** el dashboard fullscreen, la navegación de paneles y el Server Dashboard básico pueden estar funcionales como shell visual sin ejecutar operaciones reales
+- **THEN** el dashboard fullscreen, la navegación de paneles y el Server Dashboard básico pueden estar funcionales como shell visual
 
-#### Scenario: Acciones remotas siguen deshabilitadas
-- **WHEN** el usuario ve acciones como deploy, stop, update, archive, backups o scheduler en el TUI base
-- **THEN** esas acciones se presentan como previews visuales o placeholders y no disparan side effects remotos
+#### Scenario: Servicios autorizados ejecutan lifecycle real
+- **WHEN** una acción confirmada de deploy, destroy o status GCP cruza el boundary de `src/services/`
+- **THEN** los wrappers bajo `src/infrastructure/` pueden ejecutar Pulumi/GCP y health checks según los specs de `gcp-pulumi-deploy`
+
+#### Scenario: Acciones no migradas siguen deshabilitadas
+- **WHEN** el usuario ve acciones como backups, scheduler, restore, SFTP o moderación remota no cubiertas por esta change
+- **THEN** esas acciones se presentan como previews, placeholders o stubs y no disparan side effects remotos

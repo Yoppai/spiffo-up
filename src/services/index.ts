@@ -3,3 +3,4 @@ export { bootstrapLocalInventory, getLocalInventoryService, hydrateStoresFromInv
 export { buildDraftServerFromWizard, createLocalDraftServer, validateWizardDraft, validateWizardServerName } from './create-server-wizard-service.js';
 export { LocalInventoryService } from './local-inventory-service.js';
 export { PendingChangeMissingEncryptedPayloadError, PendingChangesApplicationService, planPendingChangeSteps } from './pending-changes-application-service.js';
+export { NoopServerHealthChecker, ServerLifecycleService } from './server-lifecycle-service.js';

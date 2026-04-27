@@ -34,8 +34,8 @@ export class LocalInventoryService {
   upsertServer(server: ServerRecord): void {
     const row = serverDomainToRow(server);
     this.database.query(`
-      INSERT INTO servers (id, name, provider, status, region, zone, instance_type, static_ip, game_branch, public_ip, players_online, players_max, last_error, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+      INSERT INTO servers (id, name, provider, status, region, zone, instance_type, static_ip, game_branch, public_ip, players_online, players_max, last_error, project_id, pulumi_stack_name, pulumi_workspace_path, game_port, query_port, rcon_port, public_rcon_enabled, allowed_rcon_cidrs, rcon_unsafe, rcon_password, last_deploy_started_at, last_deploy_finished_at, last_status_checked_at, gcp_address_name, gcp_instance_name, gcp_firewall_tag, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
       ON CONFLICT(id) DO UPDATE SET
         name=excluded.name,
         provider=excluded.provider,
@@ -49,8 +49,24 @@ export class LocalInventoryService {
         players_online=excluded.players_online,
         players_max=excluded.players_max,
         last_error=excluded.last_error,
+        project_id=excluded.project_id,
+        pulumi_stack_name=excluded.pulumi_stack_name,
+        pulumi_workspace_path=excluded.pulumi_workspace_path,
+        game_port=excluded.game_port,
+        query_port=excluded.query_port,
+        rcon_port=excluded.rcon_port,
+        public_rcon_enabled=excluded.public_rcon_enabled,
+        allowed_rcon_cidrs=excluded.allowed_rcon_cidrs,
+        rcon_unsafe=excluded.rcon_unsafe,
+        rcon_password=excluded.rcon_password,
+        last_deploy_started_at=excluded.last_deploy_started_at,
+        last_deploy_finished_at=excluded.last_deploy_finished_at,
+        last_status_checked_at=excluded.last_status_checked_at,
+        gcp_address_name=excluded.gcp_address_name,
+        gcp_instance_name=excluded.gcp_instance_name,
+        gcp_firewall_tag=excluded.gcp_firewall_tag,
         updated_at=CURRENT_TIMESTAMP
-    `).run(row.id, row.name, row.provider, row.status, row.region, row.zone, row.instance_type, row.static_ip, row.game_branch, row.public_ip, row.players_online, row.players_max, row.last_error);
+    `).run(row.id, row.name, row.provider, row.status, row.region, row.zone, row.instance_type, row.static_ip, row.game_branch, row.public_ip, row.players_online, row.players_max, row.last_error, row.project_id, row.pulumi_stack_name, row.pulumi_workspace_path, row.game_port, row.query_port, row.rcon_port, row.public_rcon_enabled, row.allowed_rcon_cidrs, row.rcon_unsafe, row.rcon_password, row.last_deploy_started_at, row.last_deploy_finished_at, row.last_status_checked_at, row.gcp_address_name, row.gcp_instance_name, row.gcp_firewall_tag);
   }
 
   upsertServers(servers: ServerRecord[]): void {

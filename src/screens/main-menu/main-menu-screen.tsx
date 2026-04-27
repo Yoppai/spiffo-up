@@ -182,10 +182,10 @@ function handlePendingChangesModalInput({
 
   if (key.leftArrow) app.movePendingChangesModalAction(-1);
   if (key.rightArrow) app.movePendingChangesModalAction(1);
-  if (key.return) confirmPendingChangesModalAction(app, pendingStore);
+  if (key.return) void confirmPendingChangesModalAction(app, pendingStore);
 }
 
-function confirmPendingChangesModalAction(app: ReturnType<typeof useAppStore.getState>, pendingStore: ReturnType<typeof usePendingChangesStore.getState>): void {
+async function confirmPendingChangesModalAction(app: ReturnType<typeof useAppStore.getState>, pendingStore: ReturnType<typeof usePendingChangesStore.getState>): Promise<void> {
   const action = app.pendingChangesModal.selectedAction;
 
   if (action === 'back') {
@@ -220,8 +220,8 @@ function confirmPendingChangesModalAction(app: ReturnType<typeof useAppStore.get
   const service = new PendingChangesApplicationService(inventory, pendingStore);
 
   try {
-    const result = service.applyAll({ changes: pendingStore.changes, passphrase: app.pendingChangesModal.passphraseInput });
-    app.setPendingChangesModalResult(`Applied ${result.impact.total} changes locally in ${result.steps.length} steps.`);
+    const result = await service.applyAllAsync({ changes: pendingStore.changes, passphrase: app.pendingChangesModal.passphraseInput });
+    app.setPendingChangesModalResult(`Applied ${result.impact.total} changes in ${result.steps.length} steps.`);
   } catch (error) {
     app.setPendingChangesModalError(error instanceof PendingChangeDecryptError ? 'Invalid passphrase. Back to edit or discard buffer.' : 'Could not apply pending changes.');
   }

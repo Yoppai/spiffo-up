@@ -27,15 +27,35 @@ El sistema SHALL permitir interacción de thin UI en el panel derecho cuando el 
 - **THEN** el foco alterna entre panel izquierdo y panel derecho sin avanzar entre campos internos
 
 ### Requirement: Server Management thin UI
-El sistema SHALL mostrar estado del servidor, IP, branch, players y acciones rápidas de ciclo de vida con comportamiento stub.
+El sistema SHALL mostrar estado del servidor, IP, branch, players, puertos relevantes, exposición RCON y acciones rápidas de ciclo de vida conectadas a hooks reales cuando el provider sea GCP y la acción esté implementada.
 
 #### Scenario: Acciones de ciclo de vida son seleccionables
 - **WHEN** el foco está en el panel derecho de `Server Management`
 - **THEN** el usuario puede navegar entre `Deploy`, `Start` o `Stop`, `Update` y `Archive`
 
+#### Scenario: Deploy usa hook real para GCP draft
+- **WHEN** el usuario confirma `Deploy` en un servidor GCP `draft` o `error`
+- **THEN** el sistema invoca el servicio de lifecycle y muestra estado/progreso sin llamar Pulumi directamente desde el componente UI
+
+#### Scenario: RCON expuesto muestra badge
+- **WHEN** un servidor tiene RCON público configurado
+- **THEN** Server Management muestra si RCON está `restricted` o `unsafe`
+
+#### Scenario: Deploy muestra preflight Pulumi faltante
+- **WHEN** el usuario confirma `Deploy` para un servidor GCP elegible y Pulumi CLI falta
+- **THEN** el panel muestra que Pulumi está `missing`, no ejecuta `pulumi up` y ofrece `Install Pulumi` o instrucciones manuales
+
+#### Scenario: Install Pulumi requiere confirmación
+- **WHEN** el usuario selecciona `Install Pulumi`
+- **THEN** el panel muestra una confirmación explícita antes de descargar o instalar el CLI
+
+#### Scenario: Deploy continúa tras CLI listo
+- **WHEN** el preflight Pulumi está `ready` después de detectar o instalar el CLI
+- **THEN** el sistema permite reintentar `Deploy` y enruta la acción al servicio de lifecycle sin ejecutar Pulumi directamente desde la UI
+
 #### Scenario: Archive requiere confirmación stub
 - **WHEN** el usuario confirma la acción `Archive`
-- **THEN** el sistema muestra una confirmación destructiva antes de ejecutar cualquier resultado stub
+- **THEN** el sistema muestra una confirmación destructiva antes de ejecutar cualquier resultado stub o cleanup implementado
 
 ### Requirement: Provider & Region thin UI
 El sistema SHALL mostrar provider, region, instance type, costo estimado y recomendación usando el catálogo GCP compartido, y SHALL permitir seleccionar región e instancia sin ejecutar cloud real.
@@ -149,8 +169,12 @@ El sistema SHALL mostrar historial mock de backups, ubicación local y acciones 
 - **THEN** el sistema muestra confirmación destructiva antes de completar el resultado stub
 
 ### Requirement: Adapters mock/stub no ejecutan side effects remotos
-El sistema SHALL limitar todos los adapters de esta change a datos deterministas o resultados stub locales.
+El sistema SHALL mantener adapters mock/stub para capacidades aún no implementadas, pero SHALL permitir que Server Management delegue deploy, destroy y status GCP a servicios reales fuera de la UI.
 
-#### Scenario: Acciones stub no llaman integraciones reales
-- **WHEN** el usuario activa acciones de lifecycle, players, stats, advanced settings, scheduler o backups
-- **THEN** el sistema no ejecuta Pulumi, SSH, SFTP, Docker, RCON, file picker nativo ni cloud APIs
+#### Scenario: Acciones no implementadas siguen stub
+- **WHEN** el usuario activa acciones de players, stats, advanced settings, scheduler, backups o lifecycle no cubiertas por esta change
+- **THEN** el sistema no ejecuta SSH, SFTP, Docker, RCON, file picker nativo ni cloud APIs reales para esas acciones
+
+#### Scenario: Deploy GCP sale del adapter mock
+- **WHEN** el usuario activa `Deploy` para un servidor GCP elegible
+- **THEN** la acción se enruta al servicio real de lifecycle y no al resultado stub local

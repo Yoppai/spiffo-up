@@ -4,6 +4,9 @@ import type { DashboardPanelUiState, ServerMenuId, ServerMenuItem, ServerRecord 
 import { allGameServerInstanceTypes, buildImageTag, createPendingChange, dashboardMockAdapter, estimateGcpInstanceCost, findGcpInstanceTypeMetadata, formatGcpLatency, formatInstanceTier, formatServerPlayers, formatServerStatus, gcpRegionsCatalog, recommendInstanceForMaxPlayers, validateSimpleCron } from '../../lib/index.js';
 import type { useAppStore } from '../../stores/app-store.js';
 import type { usePendingChangesStore } from '../../stores/pending-changes-store.js';
+import { useServersStore } from '../../stores/servers-store.js';
+import { getLocalInventoryService, hydrateStoresFromInventory, ServerLifecycleService } from '../../services/index.js';
+import { PulumiCliManager } from '../../infrastructure/pulumi/pulumi-cli-manager.js';
 
 const defaultUi: DashboardPanelUiState = { rightCursor: 0, rightActionCursor: 0, subView: 'main', drafts: {}, validationErrors: {}, statusMessage: null, confirmAction: null };
 const regions = gcpRegionsCatalog.map((region) => region.id);
@@ -77,13 +80,19 @@ function renderPanel(panel: ServerMenuId, server: ServerRecord, ui: DashboardPan
 
 function ServerManagementPanel({ server, ui, pendingChangesCount }: { server: ServerRecord; ui: DashboardPanelUiState; pendingChangesCount: number }) {
   const actions = ['Deploy', server.status === 'running' ? 'Stop' : 'Start', 'Update', 'Archive'];
+  const pulumiLabel = ui.drafts.pulumiStatus ? `(${ui.drafts.pulumiStatus})` : '';
   return <>
-    <Text>Status:   {formatServerStatus(server)} · Mock adapter ready</Text>
+    <Text>Status:   {formatServerStatus(server)} · {server.provider === 'gcp' ? 'GCP lifecycle boundary' : 'Mock adapter ready'}</Text>
     <Text>IP:       {server.publicIp ?? '-'}</Text>
+    <Text>Ports:    game {server.gamePort ?? '-'} / query {server.queryPort ?? '-'} / rcon {server.rconPort ?? '-'}</Text>
+    <Text>RCON:     {formatRconExposure(server)}</Text>
+    <Text>Pulumi:   {pulumiLabel || '-'}</Text>
     <Text>Branch:   {server.branch}</Text>
     <Text>Players:  {formatServerPlayers(server)}</Text>
     {pendingChangesCount > 0 ? <Text color="cyan">Apply All Changes ({pendingChangesCount})</Text> : null}
     <ActionRow actions={actions} selected={ui.rightActionCursor} />
+    {ui.confirmAction === 'Deploy' ? <Text color="yellow">Confirm Deploy? Press Enter again to create billable GCP resources.</Text> : null}
+    {ui.confirmAction === 'Install Pulumi' ? <Text color="yellow">Pulumi CLI missing. Press Enter to install.</Text> : null}
     {ui.confirmAction === 'Archive' ? <Text color="red">Confirm Archive? Press Enter again (Stub, no remote side effects).</Text> : null}
   </>;
 }
@@ -204,7 +213,7 @@ export const PendingChangesBanner: React.FC<{ count: number }> = ({ count }) => 
 function activatePanel({ app, pendingStore, server, panel, ui }: { app: ReturnType<typeof useAppStore.getState>; pendingStore: ReturnType<typeof usePendingChangesStore.getState>; server: ServerRecord; panel: ServerMenuId; ui: DashboardPanelUiState }): boolean {
   if (panel === 'provider-region') return queueProviderRegion(app, pendingStore, server, ui);
   if (panel === 'build') return queueBuild(app, pendingStore, server, ui);
-  if (panel === 'server-management') return confirmableAction(app, server, panel, ['Deploy', server.status === 'running' ? 'Stop' : 'Start', 'Update', 'Archive'][ui.rightActionCursor] ?? 'Deploy', 'Archive');
+  if (panel === 'server-management') return activateServerManagement(app, server, panel, ['Deploy', server.status === 'running' ? 'Stop' : 'Start', 'Update', 'Archive'][ui.rightActionCursor] ?? 'Deploy');
   if (panel === 'players') return confirmableAction(app, server, panel, ['Message', 'Kick', 'Ban'][ui.rightActionCursor] ?? 'Message', ['Kick', 'Ban']);
   if (panel === 'stats') return activateStats(app, panel, ui);
   if (panel === 'advanced-settings') return activateAdvanced(app, panel, ui);
@@ -292,6 +301,61 @@ function confirmableAction(app: ReturnType<typeof useAppStore.getState>, server:
   }
   app.patchDashboardPanelUi(panel, { confirmAction: null, statusMessage: dashboardMockAdapter.lifecycle(action, server).message });
   return true;
+}
+
+function activateServerManagement(app: ReturnType<typeof useAppStore.getState>, server: ServerRecord, panel: ServerMenuId, action: string): boolean {
+  const ui = app.getDashboardPanelUi(panel);
+  if (action === 'Deploy' && server.provider === 'gcp' && (server.status === 'draft' || server.status === 'error')) {
+    if (ui.confirmAction === 'Install Pulumi') {
+      app.patchDashboardPanelUi(panel, { confirmAction: null, statusMessage: 'Installing Pulumi...' });
+      void runInstallPulumi(app, panel);
+      return true;
+    }
+    if (ui.confirmAction !== 'Deploy') {
+      app.patchDashboardPanelUi(panel, { confirmAction: 'Deploy', statusMessage: null });
+      return true;
+    }
+    app.patchDashboardPanelUi(panel, { confirmAction: null, statusMessage: 'Deploy started. GCP resources may incur cost.' });
+    void runDeployAction(app, server.id, panel);
+    return true;
+  }
+
+  return confirmableAction(app, server, panel, action, 'Archive');
+}
+
+async function runDeployAction(app: ReturnType<typeof useAppStore.getState>, serverId: string, panel: ServerMenuId): Promise<void> {
+  const inventory = getLocalInventoryService();
+  if (!inventory) {
+    app.patchDashboardPanelUi(panel, { statusMessage: 'Inventory service unavailable.' });
+    return;
+  }
+  const manager = new PulumiCliManager();
+  const service = new ServerLifecycleService(inventory, new (await import('../../infrastructure/pulumi/gcp-pulumi-deployer.js')).GcpPulumiAutomationDeployer(undefined, manager), undefined, manager);
+  const preflight = await service.preflight();
+  if (preflight.status !== 'ready') {
+    app.patchDashboardPanelUi(panel, { statusMessage: preflight.status === 'missing' ? 'Pulumi CLI missing. Press Enter to install.' : `Pulumi not ready (${preflight.status}).`, confirmAction: preflight.status === 'missing' ? 'Install Pulumi' : null, drafts: { ...app.getDashboardPanelUi(panel).drafts, pulumiStatus: preflight.status } });
+    return;
+  }
+  app.patchDashboardPanelUi(panel, { drafts: { ...app.getDashboardPanelUi(panel).drafts, pulumiStatus: 'ready' } });
+  const result = await service.deploy(serverId);
+  hydrateStoresFromInventory(inventory);
+  useServersStore.getState().selectServer(serverId);
+  app.patchDashboardPanelUi(panel, { statusMessage: result.status === 'running' ? `Deploy complete: ${result.publicIp ?? 'IP pending'}` : `Deploy failed: ${result.lastError ?? 'unknown error'}` });
+}
+
+async function runInstallPulumi(app: ReturnType<typeof useAppStore.getState>, panel: ServerMenuId): Promise<void> {
+  const manager = new PulumiCliManager();
+  const result = await manager.install();
+  if (result.status === 'ready') {
+    app.patchDashboardPanelUi(panel, { statusMessage: 'Pulumi installed. Press Enter to Deploy.', confirmAction: 'Deploy', drafts: { ...app.getDashboardPanelUi(panel).drafts, pulumiStatus: 'ready' } });
+  } else {
+    app.patchDashboardPanelUi(panel, { statusMessage: `Install failed: ${result.error ?? 'unknown error'}`, confirmAction: null, drafts: { ...app.getDashboardPanelUi(panel).drafts, pulumiStatus: 'failed' } });
+  }
+}
+
+function formatRconExposure(server: ServerRecord): string {
+  if (!server.publicRconEnabled) return 'disabled';
+  return server.rconUnsafe ? 'exposed: unsafe' : 'exposed: restricted';
 }
 
 function activateStats(app: ReturnType<typeof useAppStore.getState>, panel: ServerMenuId, ui: DashboardPanelUiState): boolean {

@@ -27,7 +27,7 @@ describe('server dashboard panels', () => {
   it('renders specific content for each menu panel', () => {
     const baseUi = { rightCursor: 0, rightActionCursor: 0, subView: 'main', drafts: {}, validationErrors: {}, statusMessage: null, confirmAction: null };
     const checks: Array<[string, string[], ReturnType<typeof getPanelUi>]> = [
-      ['server-management', ['Mock adapter ready', 'Apply All Changes'], baseUi],
+      ['server-management', ['GCP lifecycle boundary', 'Ports:', 'RCON:', 'Apply All Changes'], baseUi],
       ['provider-region', ['Provider: GCP MVP', 'Estimated cost:', 'Recommendation: Balanced · n2d-standard-4'], baseUi],
       ['build', ['Current branch:', 'Image tag:'], baseUi],
       ['players', ['Connected players · Mock', 'Ana · admin'], baseUi],
@@ -100,5 +100,25 @@ describe('server dashboard panels', () => {
     const frame = app.lastFrame() ?? '';
     expect(frame).toContain('Stub');
     expect(frame).toContain('no remote side');
+  });
+
+  it('shows deploy billing confirmation for eligible GCP drafts', () => {
+    const draft = { ...server, status: 'draft' as const, publicIp: undefined };
+    handleDashboardPanelInput({ app: useAppStore.getState(), pendingStore: usePendingChangesStore.getState(), input: '', key: { return: true }, server: draft, panel: 'server-management' });
+    const ui = useAppStore.getState().getDashboardPanelUi('server-management');
+    const selectedMenu = serverMenuItems.find((item) => item.id === 'server-management')!;
+    const frame = render(<DashboardPanel selectedMenu={selectedMenu} server={draft} pendingChangesCount={0} ui={ui} />).lastFrame() ?? '';
+
+    expect(frame).toContain('Confirm Deploy?');
+    expect(frame).toContain('billable GCP resources');
+  });
+
+  it('shows Pulumi status in Server Management when present in UI drafts', () => {
+    const draft = { ...server, status: 'draft' as const };
+    const ui = { rightCursor: 0, rightActionCursor: 0, subView: 'main' as const, drafts: { pulumiStatus: 'missing' }, validationErrors: {}, statusMessage: null, confirmAction: null };
+    const selectedMenu = serverMenuItems.find((item) => item.id === 'server-management')!;
+    const frame = render(<DashboardPanel selectedMenu={selectedMenu} server={draft} pendingChangesCount={0} ui={ui} />).lastFrame() ?? '';
+    expect(frame).toContain('Pulumi:');
+    expect(frame).toContain('missing');
   });
 });
