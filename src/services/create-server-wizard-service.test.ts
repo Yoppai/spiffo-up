@@ -16,12 +16,12 @@ describe('create server wizard service', () => {
       serverName: 'Draft One',
       region: 'us-central1',
       zone: 'us-central1-a',
-      instanceType: 'e2-standard-4',
+      instanceType: 'n2-standard-4',
     });
 
     expect(server.id).toBe('draft-one');
     expect(inventory.getServer('draft-one')?.status).toBe('draft');
-    expect(inventory.getServer('draft-one')?.instanceType).toBe('e2-standard-4');
+    expect(inventory.getServer('draft-one')?.instanceType).toBe('n2-standard-4');
   });
 
   it('avoids pulumi and remote side-effect code in the wizard service', () => {

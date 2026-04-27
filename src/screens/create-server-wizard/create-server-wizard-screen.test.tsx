@@ -31,13 +31,16 @@ describe('create server wizard screen', () => {
     app.setWizardServerName('alpha');
     app.nextWizardStep();
     frame = render(<CreateServerWizard />).lastFrame() ?? '';
-    expect(frame).toContain('GCP regions/zones');
+    expect(frame).toContain('GCP zones by continent');
+    expect(frame).toContain('americas');
+    expect(frame).toContain('ms fallback');
     expect(frame).toContain('Zone: us-central1-a');
 
     app.nextWizardStep();
     frame = render(<CreateServerWizard />).lastFrame() ?? '';
-    expect(frame).toContain('Curated Project Zomboid tiers');
-    expect(frame).toContain('Balanced: e2-standard-4');
+    expect(frame).toContain('Curated Project Zomboid tiers · estimated local pricing');
+    expect(frame).toContain('Balanced: n2d-standard-4');
+    expect(frame).toContain('· Recommended');
 
     app.nextWizardStep();
     frame = render(<CreateServerWizard />).lastFrame() ?? '';
