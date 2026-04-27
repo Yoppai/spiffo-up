@@ -33,7 +33,7 @@ El sistema SHALL usar las dependencias visuales previstas por el PRD para mostra
 - **THEN** cada sección usa un contenedor titulado con borde redondeado o fallback compatible si la librería no soporta una opción exacta
 
 ### Requirement: Menú global navegable
-El sistema SHALL iniciar en Nivel 0 con foco en el panel izquierdo y un menú global navegable por teclado.
+El sistema SHALL iniciar en Nivel 0 con foco en el panel izquierdo y un menú global navegable por teclado, incluyendo acceso al Setup Wizard desde `Crear Nuevo Servidor`.
 
 #### Scenario: Foco inicial
 - **WHEN** la app carga el dashboard global
@@ -46,6 +46,10 @@ El sistema SHALL iniciar en Nivel 0 con foco en el panel izquierdo y un menú gl
 #### Scenario: TAB exclusivo entre paneles
 - **WHEN** el usuario presiona `TAB`
 - **THEN** el foco alterna entre panel izquierdo y panel derecho sin moverse entre elementos internos del panel
+
+#### Scenario: Entrar al Setup Wizard
+- **WHEN** el foco está en el panel izquierdo, `Crear Nuevo Servidor` está seleccionado y el usuario presiona `ENTER`
+- **THEN** el sistema abre el Setup Wizard de creación de servidor en lugar de mostrar solo `Coming Soon`
 
 ### Requirement: Preview de servidores activos
 El sistema SHALL mostrar una tabla de servidores activos basada en datos seed/mock hasta que exista persistencia real.

@@ -6,12 +6,15 @@ import { useServersStore } from '../../stores/servers-store.js';
 import { MainMenuView, globalMenuItems } from './main-menu-view.js';
 import { ServerDashboard, serverMenuItems } from '../server-dashboard/server-dashboard-screen.js';
 import { handleDashboardPanelInput } from '../server-dashboard/dashboard-panels.js';
+import { CreateServerWizard, handleCreateServerWizardInput } from '../create-server-wizard/create-server-wizard-screen.js';
 import { PendingChangeDecryptError, isActiveServer } from '../../lib/index.js';
 import type { NavigationState, ServerRecord } from '../../types/index.js';
 import { usePendingChangesStore } from '../../stores/pending-changes-store.js';
 import { PendingChangesApplicationService, getLocalInventoryService } from '../../services/index.js';
+import { ApplyPendingChangesModal } from '../../components/pending-changes-modal.js';
 
 const GLOBAL_MENU_ACTIVE_SERVERS_INDEX = 1;
+const GLOBAL_MENU_CREATE_SERVER_INDEX = 0;
 const BACK_TO_SERVERS_INDEX = serverMenuItems.length - 1;
 
 export const DashboardScreen: React.FC = () => {
@@ -29,6 +32,15 @@ export const DashboardScreen: React.FC = () => {
       return handlePendingChangesModalInput({ app, input, key, pendingStore });
     }
 
+    if ((input === '\u0001' || (key.ctrl && input.toLowerCase() === 'a')) && pendingStore.changes.length > 0) {
+      app.openPendingChangesModal();
+      return;
+    }
+
+    if (navigation.current === 'wizard') {
+      return handleCreateServerWizardInput({ app, input, key });
+    }
+
     if (input.toLowerCase() === 'q') return exit();
     if (key.tab) return app.toggleFocusedPanel();
 
@@ -40,10 +52,19 @@ export const DashboardScreen: React.FC = () => {
   });
 
   if (navigation.mode === 'server') {
-    return <ServerDashboard />;
+    return <DashboardFrame><ServerDashboard /></DashboardFrame>;
   }
 
-  return <MainMenuView />;
+  if (navigation.current === 'wizard') {
+    return <DashboardFrame><CreateServerWizard /></DashboardFrame>;
+  }
+
+  return <DashboardFrame><MainMenuView /></DashboardFrame>;
+};
+
+const DashboardFrame: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const modal = useInkStore(useAppStore, (state) => state.pendingChangesModal);
+  return <>{children}{modal.isOpen ? <ApplyPendingChangesModal /> : null}</>;
 };
 
 function handleGlobalInput({
@@ -62,6 +83,7 @@ function handleGlobalInput({
   if (navigation.focusedPanel === 'left') {
     if (key.upArrow) app.moveGlobalMenu(-1, globalMenuItems.length);
     if (key.downArrow) app.moveGlobalMenu(1, globalMenuItems.length);
+    if (key.return && navigation.globalMenuIndex === GLOBAL_MENU_CREATE_SERVER_INDEX) app.openCreateServerWizard();
     return;
   }
 

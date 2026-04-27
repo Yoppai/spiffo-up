@@ -1,0 +1,270 @@
+import React from 'react';
+import { Box, Text } from 'ink';
+import { LayoutShell } from '../../components/index.js';
+import { useInkStore } from '../../hooks/use-ink-store.js';
+import { isActiveServer } from '../../lib/index.js';
+import { useAppStore } from '../../stores/app-store.js';
+import { usePendingChangesStore } from '../../stores/pending-changes-store.js';
+import { useServersStore } from '../../stores/servers-store.js';
+import { createLocalDraftServer, getLocalInventoryService, hydrateStoresFromInventory } from '../../services/index.js';
+import type { CreateServerWizardState } from '../../types/index.js';
+import { gcpRegions, instanceTiers, providerOptions, wizardSteps } from './catalog.js';
+
+const PROVIDER_ACTIONS = ['Cancel Wizard', 'Next'] as const;
+const STEP_ACTIONS = ['Back', 'Next'] as const;
+const REVIEW_ACTIONS = ['Back', 'Create Server'] as const;
+
+export const CreateServerWizard: React.FC = () => {
+  const navigation = useInkStore(useAppStore, (state) => state.navigation);
+  const wizard = useInkStore(useAppStore, (state) => state.createServerWizard);
+  const servers = useInkStore(useServersStore, (state) => state.servers);
+  const pendingChanges = useInkStore(usePendingChangesStore, (state) => state.changes.length);
+  const activeServers = servers.filter(isActiveServer);
+  const currentStep = wizardSteps[wizard.stepIndex] ?? wizardSteps[0]!;
+
+  return (
+    <LayoutShell
+      leftTitle="Setup Wizard"
+      rightTitle={currentStep.label}
+      focusedPanel={navigation.focusedPanel}
+      activeServers={activeServers.length}
+      totalServers={servers.length}
+      pendingChangesCount={pendingChanges}
+      left={<WizardStepper wizard={wizard} />}
+      right={<WizardStepContent wizard={wizard} />}
+    />
+  );
+};
+
+export function handleCreateServerWizardInput({
+  app,
+  input,
+  key,
+}: {
+  app: ReturnType<typeof useAppStore.getState>;
+  input: string;
+  key: { upArrow?: boolean; downArrow?: boolean; leftArrow?: boolean; rightArrow?: boolean; escape?: boolean; return?: boolean; backspace?: boolean; delete?: boolean };
+}) {
+  const wizard = useAppStore.getState().createServerWizard;
+  const step = wizardSteps[wizard.stepIndex]?.id ?? 'provider';
+
+  if (key.escape) {
+    app.previousWizardStep();
+    return;
+  }
+
+  if (key.leftArrow) {
+    if (step === 'region') app.moveWizardZoneCursor(-1);
+    else app.moveWizardActionCursor(-1, actionCountForStep(step));
+    return;
+  }
+
+  if (key.rightArrow) {
+    if (step === 'region') app.moveWizardZoneCursor(1);
+    else app.moveWizardActionCursor(1, actionCountForStep(step));
+    return;
+  }
+
+  if (key.upArrow) {
+    if (step === 'provider') app.moveWizardProviderCursor(-1);
+    if (step === 'region') app.moveWizardRegionCursor(-1);
+    if (step === 'instance') app.moveWizardInstanceCursor(-1);
+    return;
+  }
+
+  if (key.downArrow) {
+    if (step === 'provider') app.moveWizardProviderCursor(1);
+    if (step === 'region') app.moveWizardRegionCursor(1);
+    if (step === 'instance') app.moveWizardInstanceCursor(1);
+    return;
+  }
+
+  if (step === 'auth-project' || step === 'server-name') {
+    const currentValue = step === 'auth-project' ? wizard.draft.projectId : wizard.draft.serverName;
+    if (key.backspace || key.delete) {
+      setTextDraft(app, step, currentValue.slice(0, -1));
+      return;
+    }
+
+    if (!key.return && input.length === 1 && input >= ' ') {
+      setTextDraft(app, step, `${currentValue}${input}`);
+      return;
+    }
+  }
+
+  if (key.return) confirmWizardAction(app);
+}
+
+function WizardStepper({ wizard }: { wizard: CreateServerWizardState }) {
+  return (
+    <Box flexDirection="column">
+      {wizardSteps.map((step, index) => {
+        const active = wizard.stepIndex === index;
+        const done = wizard.stepIndex > index;
+        return (
+          <Text key={step.id} color={active ? 'cyan' : done ? 'green' : undefined} inverse={active}>
+            {active ? '>' : done ? '✓' : ' '} {index + 1}. {step.label}
+          </Text>
+        );
+      })}
+      <Text dimColor>ESC backs up; TAB changes panels.</Text>
+    </Box>
+  );
+}
+
+function WizardStepContent({ wizard }: { wizard: CreateServerWizardState }) {
+  const step = wizardSteps[wizard.stepIndex]?.id ?? 'provider';
+
+  return (
+    <Box flexDirection="column" gap={1}>
+      {step === 'provider' ? <ProviderStep wizard={wizard} /> : null}
+      {step === 'auth-project' ? <AuthProjectStep wizard={wizard} /> : null}
+      {step === 'server-name' ? <ServerNameStep wizard={wizard} /> : null}
+      {step === 'region' ? <RegionStep wizard={wizard} /> : null}
+      {step === 'instance' ? <InstanceStep wizard={wizard} /> : null}
+      {step === 'review' ? <ReviewStep wizard={wizard} /> : null}
+      {wizard.statusMessage ? <Text color="yellow">{wizard.statusMessage}</Text> : null}
+    </Box>
+  );
+}
+
+function ProviderStep({ wizard }: { wizard: CreateServerWizardState }) {
+  return (
+    <Box flexDirection="column">
+      <Text>Select cloud provider for MVP:</Text>
+      {providerOptions.map((provider, index) => (
+        <Text key={provider.id} color={wizard.providerCursor === index ? 'cyan' : provider.enabled ? undefined : 'gray'} inverse={wizard.providerCursor === index}>
+          {wizard.providerCursor === index ? '>' : ' '} {provider.label} · {provider.statusLabel}
+        </Text>
+      ))}
+      <ActionRow actions={PROVIDER_ACTIONS} cursor={wizard.actionCursor} />
+    </Box>
+  );
+}
+
+function AuthProjectStep({ wizard }: { wizard: CreateServerWizardState }) {
+  return (
+    <Box flexDirection="column">
+      <Text>Local detection placeholder: {wizard.draft.projectId || 'No project detected'}</Text>
+      <Text dimColor>Edit project id (optional). It will be validated during future deploy.</Text>
+      <Text>Project id: {wizard.draft.projectId || '<optional>'}</Text>
+      <ActionRow actions={STEP_ACTIONS} cursor={wizard.actionCursor} />
+    </Box>
+  );
+}
+
+function ServerNameStep({ wizard }: { wizard: CreateServerWizardState }) {
+  return (
+    <Box flexDirection="column">
+      <Text>Name: {wizard.draft.serverName || '<required>'}</Text>
+      {wizard.validationErrors.serverName ? <Text color="red">{wizard.validationErrors.serverName}</Text> : null}
+      <Text dimColor>Use letters, numbers, spaces, dots, underscores or dashes.</Text>
+      <ActionRow actions={STEP_ACTIONS} cursor={wizard.actionCursor} />
+    </Box>
+  );
+}
+
+function RegionStep({ wizard }: { wizard: CreateServerWizardState }) {
+  const selectedRegion = gcpRegions[wizard.regionCursor] ?? gcpRegions[0]!;
+  return (
+    <Box flexDirection="column">
+      <Text>GCP regions/zones · latency placeholder</Text>
+      {gcpRegions.map((region, index) => (
+        <Text key={region.id} color={wizard.regionCursor === index ? 'cyan' : undefined} inverse={wizard.regionCursor === index}>
+          {wizard.regionCursor === index ? '>' : ' '} {region.label} · {region.location}
+        </Text>
+      ))}
+      <Text>Zone: {selectedRegion.zones[wizard.zoneCursor]?.label ?? selectedRegion.zones[0]?.label} · {selectedRegion.zones[wizard.zoneCursor]?.latencyLabel ?? 'mock latency'}</Text>
+      <ActionRow actions={STEP_ACTIONS} cursor={wizard.actionCursor} />
+    </Box>
+  );
+}
+
+function InstanceStep({ wizard }: { wizard: CreateServerWizardState }) {
+  return (
+    <Box flexDirection="column">
+      <Text>Curated Project Zomboid tiers</Text>
+      {instanceTiers.map((tier, index) => (
+        <Text key={tier.id} color={wizard.instanceCursor === index ? 'cyan' : undefined} inverse={wizard.instanceCursor === index}>
+          {wizard.instanceCursor === index ? '>' : ' '} {tier.label}: {tier.instanceType} · {tier.vcpu} vCPU · {tier.ramGb}GB RAM · JVM {tier.jvmMemory} · {tier.estimatedMonthlyCost}
+        </Text>
+      ))}
+      <Text dimColor>{instanceTiers[wizard.instanceCursor]?.playerGuidance}</Text>
+      <ActionRow actions={STEP_ACTIONS} cursor={wizard.actionCursor} />
+    </Box>
+  );
+}
+
+function ReviewStep({ wizard }: { wizard: CreateServerWizardState }) {
+  const tier = instanceTiers.find((candidate) => candidate.instanceType === wizard.draft.instanceType);
+  return (
+    <Box flexDirection="column">
+      <Text color="green">Review local server draft</Text>
+      <Text>Provider: GCP</Text>
+      <Text>Project: {wizard.draft.projectId || 'No project detected / optional'}</Text>
+      <Text>Server name: {wizard.draft.serverName}</Text>
+      <Text>Region/zone: {wizard.draft.region} / {wizard.draft.zone}</Text>
+      <Text>Instance: {tier?.label ?? 'Selected'} · {wizard.draft.instanceType}</Text>
+      {wizard.draft.projectId ? <Text dimColor>Project id is a local placeholder and is not persisted until deploy support lands.</Text> : null}
+      <Text color="yellow">Creates local draft only; no Pulumi, SSH, SFTP or RCON will run.</Text>
+      <Text>Se creará el servidor en tu inventario local. Podrás desplegarlo desde su dashboard cuando el deploy esté disponible.</Text>
+      <ActionRow actions={REVIEW_ACTIONS} cursor={wizard.actionCursor} />
+    </Box>
+  );
+}
+
+function ActionRow({ actions, cursor }: { actions: ReadonlyArray<string>; cursor: number }) {
+  return (
+    <Box gap={2}>
+      {actions.map((action, index) => (
+        <Text key={action} color={cursor === index ? 'cyan' : undefined} inverse={cursor === index}>[{action}]</Text>
+      ))}
+    </Box>
+  );
+}
+
+function actionCountForStep(step: string): number {
+  return step === 'provider' ? PROVIDER_ACTIONS.length : STEP_ACTIONS.length;
+}
+
+function setTextDraft(app: ReturnType<typeof useAppStore.getState>, step: string, value: string): void {
+  if (step === 'auth-project') app.setWizardProjectId(value);
+  if (step === 'server-name') app.setWizardServerName(value);
+}
+
+function confirmWizardAction(app: ReturnType<typeof useAppStore.getState>): void {
+  const wizard = useAppStore.getState().createServerWizard;
+  const step = wizardSteps[wizard.stepIndex]?.id ?? 'provider';
+
+  if (wizard.actionCursor === 0) {
+    if (step === 'provider') app.cancelCreateServerWizard();
+    else app.previousWizardStep();
+    return;
+  }
+
+  if (step === 'provider' && providerOptions[wizard.providerCursor]?.enabled === false) {
+    app.setWizardStatusMessage(`${providerOptions[wizard.providerCursor]?.label} is Coming Soon.`);
+    return;
+  }
+
+  if (step !== 'review') {
+    app.nextWizardStep();
+    return;
+  }
+
+  const inventory = getLocalInventoryService();
+  if (!inventory) {
+    app.setWizardStatusMessage('Inventory service unavailable. Cannot create local draft.');
+    return;
+  }
+
+  try {
+    const created = createLocalDraftServer(inventory, wizard.draft);
+    hydrateStoresFromInventory(inventory);
+    useServersStore.getState().selectServer(created.id);
+    app.resetCreateServerWizard();
+    app.enterServerDashboard();
+  } catch (error) {
+    app.setWizardStatusMessage(error instanceof Error ? error.message : 'Could not create local draft.');
+  }
+}

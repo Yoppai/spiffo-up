@@ -7,7 +7,6 @@ import { usePendingChangesStore } from '../../stores/pending-changes-store.js';
 import { useServersStore } from '../../stores/servers-store.js';
 import type { DashboardPanelUiState, ServerMenuItem, ServerRecord } from '../../types/index.js';
 import { countPendingChangesByPanel, isActiveServer } from '../../lib/index.js';
-import { ApplyPendingChangesModal } from '../../components/pending-changes-modal.js';
 import { DashboardPanel, getPanelUi } from './dashboard-panels.js';
 
 export const serverMenuItems: ServerMenuItem[] = [
@@ -34,24 +33,20 @@ export const ServerDashboard: React.FC = () => {
   const activeServers = servers.filter(isActiveServer);
   const selectedMenu = serverMenuItems[navigation.serverMenuIndex] ?? serverMenuItems[0]!;
   const panelCounts = countPendingChangesByPanel(changes);
-  const modal = useInkStore(useAppStore, (state) => state.pendingChangesModal);
   const dashboardPanels = useInkStore(useAppStore, (state) => state.dashboardPanels);
   const items = serverMenuItems.map((item) => ({ ...item, label: panelCounts[item.id] ? `${item.label} •` : item.label }));
 
   return (
-    <>
-      <LayoutShell
-        leftTitle={selectedServer?.name ?? 'Server'}
-        rightTitle={selectedMenu.label}
-        focusedPanel={navigation.focusedPanel}
-        activeServers={activeServers.length}
-        totalServers={servers.length}
-        pendingChangesCount={pendingChanges}
-        left={<SelectableMenu items={items} selectedIndex={navigation.serverMenuIndex} />}
-        right={<ServerContent selectedMenu={selectedMenu} server={selectedServer} pendingChangesCount={pendingChanges} ui={getPanelUi(dashboardPanels, selectedMenu.id)} />}
-      />
-      {modal.isOpen ? <ApplyPendingChangesModal /> : null}
-    </>
+    <LayoutShell
+      leftTitle={selectedServer?.name ?? 'Server'}
+      rightTitle={selectedMenu.label}
+      focusedPanel={navigation.focusedPanel}
+      activeServers={activeServers.length}
+      totalServers={servers.length}
+      pendingChangesCount={pendingChanges}
+      left={<SelectableMenu items={items} selectedIndex={navigation.serverMenuIndex} />}
+      right={<ServerContent selectedMenu={selectedMenu} server={selectedServer} pendingChangesCount={pendingChanges} ui={getPanelUi(dashboardPanels, selectedMenu.id)} />}
+    />
   );
 };
 

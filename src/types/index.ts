@@ -144,6 +144,67 @@ export interface PersistedSettings extends AppSettings {
 
 export type NavigationTarget = 'dashboard' | 'servers' | 'settings' | 'wizard' | 'changes';
 
+export type WizardStepId = 'provider' | 'auth-project' | 'server-name' | 'region' | 'instance' | 'review';
+
+export type WizardActionId = 'cancel' | 'next' | 'create-server';
+
+export interface WizardStep {
+  id: WizardStepId;
+  label: string;
+}
+
+export interface ProviderOption {
+  id: Provider;
+  label: string;
+  enabled: boolean;
+  statusLabel?: string;
+}
+
+export interface GcpZoneOption {
+  id: string;
+  label: string;
+  latencyLabel: string;
+}
+
+export interface GcpRegionOption {
+  id: string;
+  label: string;
+  location: string;
+  zones: GcpZoneOption[];
+}
+
+export interface InstanceTierOption {
+  id: string;
+  label: string;
+  instanceType: string;
+  vcpu: number;
+  ramGb: number;
+  jvmMemory: string;
+  estimatedMonthlyCost: string;
+  playerGuidance: string;
+}
+
+export interface CreateServerWizardDraft {
+  provider: Provider;
+  projectId: string;
+  serverName: string;
+  region: string;
+  zone: string;
+  instanceType: string;
+}
+
+export interface CreateServerWizardState {
+  stepIndex: number;
+  providerCursor: number;
+  actionCursor: number;
+  regionCursor: number;
+  zoneCursor: number;
+  instanceCursor: number;
+  draft: CreateServerWizardDraft;
+  validationErrors: Record<string, string>;
+  statusMessage?: string | null;
+}
+
 export interface NavigationState {
   current: NavigationTarget;
   mode: DashboardMode;

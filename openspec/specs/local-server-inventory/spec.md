@@ -18,11 +18,15 @@ El sistema SHALL instalar un schema SQLite local versionado para persistir servi
 - **THEN** no duplica datos, no falla por tablas existentes y conserva los registros existentes
 
 ### Requirement: CRUD básico de servidores
-El sistema SHALL exponer operaciones locales para crear, leer, actualizar y archivar servidores en SQLite mediante una capa service/repository.
+El sistema SHALL exponer operaciones locales para crear, leer, actualizar y archivar servidores en SQLite mediante una capa service/repository, incluyendo creación de servidores `draft` desde el Setup Wizard.
 
 #### Scenario: Crear servidor local
 - **WHEN** se crea un servidor con campos mínimos válidos de inventario
 - **THEN** el sistema persiste el registro en `servers` con timestamps y lo puede leer de vuelta
+
+#### Scenario: Crear draft desde wizard
+- **WHEN** el usuario confirma el review del Setup Wizard con provider GCP, nombre, región/zona e instance type válidos
+- **THEN** el sistema persiste un servidor local con estado `draft` y lo puede hidratar en los stores Zustand
 
 #### Scenario: Actualizar servidor local
 - **WHEN** se actualiza provider, zona, instance type, branch, IP, status o error del servidor
@@ -89,8 +93,12 @@ El sistema SHALL hidratar los stores Zustand de servidores, settings y pending c
 - **THEN** no reemplaza datos de usuario con seeds demo
 
 ### Requirement: Sin side effects remotos
-El sistema SHALL limitar esta capacidad a persistencia local y no ejecutar operaciones cloud ni conexiones remotas.
+El sistema SHALL limitar esta capacidad a persistencia local y no ejecutar operaciones cloud ni conexiones remotas, incluyendo la confirmación del Setup Wizard.
 
 #### Scenario: CRUD local no dispara cloud
 - **WHEN** se crean, actualizan, archivan o cargan servidores del inventario
 - **THEN** no se ejecuta Pulumi, SSH, SFTP ni RCON
+
+#### Scenario: Confirmar wizard no dispara cloud
+- **WHEN** el usuario confirma el review del Setup Wizard
+- **THEN** el sistema crea solo el registro local y no ejecuta Pulumi, SSH, SFTP ni RCON
