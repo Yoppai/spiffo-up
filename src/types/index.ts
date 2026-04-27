@@ -48,9 +48,40 @@ export interface ServerRecord {
   branch: 'stable' | 'unstable' | 'outdatedunstable';
   publicIp?: string;
   lastError?: string | null;
+  projectId?: string | null;
+  pulumiStackName?: string | null;
+  pulumiWorkspacePath?: string | null;
+  gamePort?: number | null;
+  queryPort?: number | null;
+  rconPort?: number | null;
+  publicRconEnabled?: boolean;
+  allowedRconCidrs?: string[];
+  rconUnsafe?: boolean;
+  rconPassword?: string | null;
+  lastDeployStartedAt?: string | null;
+  lastDeployFinishedAt?: string | null;
+  lastStatusCheckedAt?: string | null;
+  gcpAddressName?: string | null;
+  gcpInstanceName?: string | null;
+  gcpFirewallTag?: string | null;
   createdAt?: string;
   updatedAt?: string;
   archived?: boolean;
+}
+
+export interface ServerDeployPorts {
+  gamePort: number;
+  queryPort: number;
+  rconPort: number;
+}
+
+export interface GcpDeployOutputs {
+  publicIp?: string | null;
+  staticIp?: string | null;
+  instanceName?: string | null;
+  addressName?: string | null;
+  firewallTag?: string | null;
+  status?: ServerStatus;
 }
 
 export interface PendingChange {
