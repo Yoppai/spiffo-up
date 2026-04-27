@@ -21,6 +21,22 @@ describe('local inventory service', () => {
       playersMax: 8,
       branch: 'unstable',
       publicIp: '1.2.3.4',
+      projectId: 'gcp-project',
+      pulumiStackName: 'spiffo-srv-1',
+      pulumiWorkspacePath: '/home/user/.spiffo-up/pulumi/srv-1',
+      gamePort: 30000,
+      queryPort: 30001,
+      rconPort: 40000,
+      publicRconEnabled: true,
+      allowedRconCidrs: ['203.0.113.10/32'],
+      rconUnsafe: false,
+      rconPassword: 'StrongRconPassword-1234567890',
+      lastDeployStartedAt: '2026-01-01T00:00:00.000Z',
+      lastDeployFinishedAt: '2026-01-01T00:05:00.000Z',
+      lastStatusCheckedAt: '2026-01-01T00:06:00.000Z',
+      gcpAddressName: 'spiffo-srv-1-ip',
+      gcpInstanceName: 'spiffo-srv-1',
+      gcpFirewallTag: 'spiffo-srv-1',
       archived: false,
     });
 
@@ -28,6 +44,15 @@ describe('local inventory service', () => {
     expect(service.listServers()[0]!.instanceType).toBe('e2-standard-2');
     expect(service.listServers()[0]!.staticIp).toBe('1.2.3.4');
     expect(service.listServers()[0]!.branch).toBe('unstable');
+    expect(service.listServers()[0]).toMatchObject({
+      pulumiStackName: 'spiffo-srv-1',
+      gamePort: 30000,
+      queryPort: 30001,
+      rconPort: 40000,
+      publicRconEnabled: true,
+      allowedRconCidrs: ['203.0.113.10/32'],
+      rconUnsafe: false,
+    });
 
     expect(service.getSettings()).toEqual({ locale: 'es', theme: 'dark', backupPath: '' });
     expect(service.updateSettings({ locale: 'en', backupPath: '/tmp/backups' })).toEqual({ locale: 'en', theme: 'dark', backupPath: '/tmp/backups' });
@@ -106,7 +131,7 @@ describe('inventory mappers', () => {
       playersMax: null,
       branch: 'stable',
       publicIp: undefined,
-    })).toMatchObject({ instance_type: 'n2-standard-4', static_ip: null, game_branch: 'stable' });
+    })).toMatchObject({ instance_type: 'n2-standard-4', static_ip: null, game_branch: 'stable', game_port: null, public_rcon_enabled: 0 });
 
     expect(backupDomainToRow({
       id: 'bkp-2',

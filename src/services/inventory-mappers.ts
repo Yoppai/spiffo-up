@@ -14,6 +14,22 @@ export interface ServerRow {
   players_online: number | null;
   players_max: number | null;
   last_error: string | null;
+  project_id?: string | null;
+  pulumi_stack_name?: string | null;
+  pulumi_workspace_path?: string | null;
+  game_port?: number | null;
+  query_port?: number | null;
+  rcon_port?: number | null;
+  public_rcon_enabled?: number | null;
+  allowed_rcon_cidrs?: string | null;
+  rcon_unsafe?: number | null;
+  rcon_password?: string | null;
+  last_deploy_started_at?: string | null;
+  last_deploy_finished_at?: string | null;
+  last_status_checked_at?: string | null;
+  gcp_address_name?: string | null;
+  gcp_instance_name?: string | null;
+  gcp_firewall_tag?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -64,6 +80,22 @@ export const serverRowToDomain = (row: ServerRow): ServerRecord => ({
   branch: row.game_branch,
   publicIp: row.public_ip ?? undefined,
   lastError: row.last_error,
+  projectId: row.project_id ?? null,
+  pulumiStackName: row.pulumi_stack_name ?? null,
+  pulumiWorkspacePath: row.pulumi_workspace_path ?? null,
+  gamePort: row.game_port ?? null,
+  queryPort: row.query_port ?? null,
+  rconPort: row.rcon_port ?? null,
+  publicRconEnabled: row.public_rcon_enabled === 1,
+  allowedRconCidrs: parseStringArray(row.allowed_rcon_cidrs),
+  rconUnsafe: row.rcon_unsafe === 1,
+  rconPassword: row.rcon_password ?? null,
+  lastDeployStartedAt: row.last_deploy_started_at ?? null,
+  lastDeployFinishedAt: row.last_deploy_finished_at ?? null,
+  lastStatusCheckedAt: row.last_status_checked_at ?? null,
+  gcpAddressName: row.gcp_address_name ?? null,
+  gcpInstanceName: row.gcp_instance_name ?? null,
+  gcpFirewallTag: row.gcp_firewall_tag ?? null,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
   archived: row.status === 'archived',
@@ -83,9 +115,35 @@ export const serverDomainToRow = (server: ServerRecord): ServerRow => ({
   players_online: server.playersOnline,
   players_max: server.playersMax,
   last_error: server.lastError ?? null,
+  project_id: server.projectId ?? null,
+  pulumi_stack_name: server.pulumiStackName ?? null,
+  pulumi_workspace_path: server.pulumiWorkspacePath ?? null,
+  game_port: server.gamePort ?? null,
+  query_port: server.queryPort ?? null,
+  rcon_port: server.rconPort ?? null,
+  public_rcon_enabled: server.publicRconEnabled ? 1 : 0,
+  allowed_rcon_cidrs: server.allowedRconCidrs?.length ? JSON.stringify(server.allowedRconCidrs) : null,
+  rcon_unsafe: server.rconUnsafe ? 1 : 0,
+  rcon_password: server.rconPassword ?? null,
+  last_deploy_started_at: server.lastDeployStartedAt ?? null,
+  last_deploy_finished_at: server.lastDeployFinishedAt ?? null,
+  last_status_checked_at: server.lastStatusCheckedAt ?? null,
+  gcp_address_name: server.gcpAddressName ?? null,
+  gcp_instance_name: server.gcpInstanceName ?? null,
+  gcp_firewall_tag: server.gcpFirewallTag ?? null,
   created_at: server.createdAt ?? new Date().toISOString(),
   updated_at: server.updatedAt ?? new Date().toISOString(),
 });
+
+function parseStringArray(value: string | null | undefined): string[] {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : [];
+  } catch {
+    return [];
+  }
+}
 
 export const settingsRowsToDomain = (rows: SettingsRow[], defaults: PersistedSettings): PersistedSettings => {
   const values = Object.fromEntries(rows.map((row) => [row.key, row.value]));

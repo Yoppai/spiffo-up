@@ -26,6 +26,20 @@ describe('pending changes application service', () => {
     expect(store.lockSecretSession).toHaveBeenCalledTimes(1);
   });
 
+  it('delegates infrastructure changes before clearing state', async () => {
+    const clearPendingChanges = mock(() => {});
+    const store = { clearChanges: mock(() => {}), discardAll: mock(() => {}), unlockSecretSession: mock(() => {}), lockSecretSession: mock(() => {}) };
+    const lifecycle = { applyInfrastructureChanges: mock(async () => {}) };
+    const service = new PendingChangesApplicationService({ clearPendingChanges } as never, store, lifecycle);
+
+    const result = await service.applyAllAsync({ changes: [{ id: 'infra', label: 'region', scope: 'server', serverId: 'srv-1', category: 'infrastructure', field: 'region', newValue: 'us-central1' }] });
+
+    expect(lifecycle.applyInfrastructureChanges).toHaveBeenCalledTimes(1);
+    expect(result.steps[0]?.label).toBe('Apply infrastructure changes via lifecycle service');
+    expect(clearPendingChanges).toHaveBeenCalledTimes(1);
+    expect(store.clearChanges).toHaveBeenCalledTimes(1);
+  });
+
   it('fails closed when sensitive payload is missing', () => {
     const clearPendingChanges = mock(() => {});
     const store = { clearChanges: mock(() => {}), discardAll: mock(() => {}), unlockSecretSession: mock(() => {}), lockSecretSession: mock(() => {}) };
