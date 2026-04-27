@@ -1,13 +1,13 @@
 import React from 'react';
 import { Box, Text } from 'ink';
 import type { DashboardPanelUiState, ServerMenuId, ServerMenuItem, ServerRecord } from '../../types/index.js';
-import { buildImageTag, createPendingChange, dashboardMockAdapter, estimateMonthlyCost, formatInstanceTier, formatServerPlayers, formatServerStatus, validateSimpleCron } from '../../lib/index.js';
+import { allGameServerInstanceTypes, buildImageTag, createPendingChange, dashboardMockAdapter, estimateGcpInstanceCost, findGcpInstanceTypeMetadata, formatGcpLatency, formatInstanceTier, formatServerPlayers, formatServerStatus, gcpRegionsCatalog, recommendInstanceForMaxPlayers, validateSimpleCron } from '../../lib/index.js';
 import type { useAppStore } from '../../stores/app-store.js';
 import type { usePendingChangesStore } from '../../stores/pending-changes-store.js';
 
 const defaultUi: DashboardPanelUiState = { rightCursor: 0, rightActionCursor: 0, subView: 'main', drafts: {}, validationErrors: {}, statusMessage: null, confirmAction: null };
-const regions = ['us-central1', 'us-east1', 'southamerica-east1'];
-const instances = ['e2-standard-2', 'n2-standard-4'];
+const regions = gcpRegionsCatalog.map((region) => region.id);
+const instances = allGameServerInstanceTypes.map((metadata) => metadata.instanceType);
 const branches: ServerRecord['branch'][] = ['stable', 'unstable', 'outdatedunstable'];
 const basicFields = ['serverName', 'publicName', 'description', 'serverPassword', 'publicListing'] as const;
 const adminFields = ['adminUsername', 'adminPassword'] as const;
@@ -91,12 +91,17 @@ function ServerManagementPanel({ server, ui, pendingChangesCount }: { server: Se
 function ProviderRegionPanel({ server, ui }: { server: ServerRecord; ui: DashboardPanelUiState }) {
   const region = ui.drafts.region ?? server.region ?? regions[0]!;
   const instanceType = ui.drafts.instanceType ?? server.instanceType;
+  const regionMetadata = gcpRegionsCatalog.find((candidate) => candidate.id === region) ?? gcpRegionsCatalog[0]!;
+  const zone = regionMetadata.zones[0];
+  const instanceMetadata = findGcpInstanceTypeMetadata(instanceType);
+  const cost = estimateGcpInstanceCost(instanceType);
+  const recommendation = recommendInstanceForMaxPlayers(server.playersMax ?? undefined);
   return <>
     <Text>Provider: GCP MVP · AWS Coming Soon · Azure Coming Soon</Text>
-    <CursorLine active={ui.rightCursor === 0}>Region: {region} (←→ choose, Enter queue)</CursorLine>
-    <CursorLine active={ui.rightCursor === 1}>Instance: {formatInstanceTier(instanceType)} (←→ choose, Enter queue)</CursorLine>
-    <Text>Estimated cost: {estimateMonthlyCost(instanceType, region)}</Text>
-    <Text color="gray">Recommendation: Mock Balanced tier for 20 players.</Text>
+    <CursorLine active={ui.rightCursor === 0}>Region: {region} · {regionMetadata.continent} · {regionMetadata.location} · {zone ? formatGcpLatency(undefined, zone.fallbackLatencyMs) : 'measuring...'} (←→ choose, Enter queue)</CursorLine>
+    <CursorLine active={ui.rightCursor === 1}>Instance: {instanceMetadata ? `${instanceMetadata.label} (${instanceType})` : formatInstanceTier(instanceType)} · {instanceMetadata?.vcpu ?? '?'} vCPU · {instanceMetadata?.ramGb ?? '?'}GB (←→ choose, Enter queue)</CursorLine>
+    <Text>Estimated cost: {cost.hourlyLabel} · {cost.monthlyLabel} · local estimate</Text>
+    <Text color="gray">Recommendation: {recommendation.tierLabel} · {recommendation.instanceType} for {server.playersMax ?? 20} MaxPlayers.</Text>
   </>;
 }
 
