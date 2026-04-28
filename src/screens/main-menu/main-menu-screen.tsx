@@ -7,6 +7,7 @@ import { MainMenuView, globalMenuItems } from './main-menu-view.js';
 import { ServerDashboard, serverMenuItems } from '../server-dashboard/server-dashboard-screen.js';
 import { handleDashboardPanelInput } from '../server-dashboard/dashboard-panels.js';
 import { handleGlobalSettingsInput } from './global-settings-input.js';
+import { handleArchivedServersInput } from '../archived-servers/archived-servers-input.js';
 import { CreateServerWizard, handleCreateServerWizardInput } from '../create-server-wizard/create-server-wizard-screen.js';
 import { PendingChangeDecryptError, isActiveServer } from '../../lib/index.js';
 import type { NavigationState, ServerRecord } from '../../types/index.js';
@@ -16,6 +17,7 @@ import { ApplyPendingChangesModal } from '../../components/pending-changes-modal
 
 const GLOBAL_MENU_ACTIVE_SERVERS_INDEX = 1;
 const GLOBAL_MENU_CREATE_SERVER_INDEX = 0;
+const GLOBAL_MENU_ARCHIVED_SERVERS_INDEX = 2;
 const GLOBAL_MENU_GLOBAL_SETTINGS_INDEX = 3;
 const BACK_TO_SERVERS_INDEX = serverMenuItems.length - 1;
 
@@ -93,6 +95,10 @@ function handleGlobalInput({
 
   if (navigation.globalMenuIndex === GLOBAL_MENU_GLOBAL_SETTINGS_INDEX) {
     return handleGlobalSettingsInput({ app, key, navigation, input });
+  }
+
+  if (navigation.globalMenuIndex === GLOBAL_MENU_ARCHIVED_SERVERS_INDEX) {
+    return handleArchivedServersInput({ app, key, navigation, serverStore });
   }
 
   if (key.upArrow) app.moveActiveServersCursor(-1, activeServers.length);
