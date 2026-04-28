@@ -1,5 +1,41 @@
 {
   "app": {
     "title": "Spiffo Up"
+  },
+  "header": {
+    "title": "SPIFFO-UP"
+  },
+  "footer": {
+    "esc": "[ESC] Volver",
+    "navigate": "[↑↓] Navegar",
+    "tab": "[TAB] Cambiar Panel",
+    "enter": "[ENTER] Seleccionar",
+    "f1": "[F1] Ayuda",
+    "ctrlA": "[Ctrl+A] Aplicar",
+    "quit": "[Q] Salir"
+  },
+  "systemStatus": {
+    "title": "Estado del Sistema",
+    "version": "v{{version}}",
+    "activeServers": "Servidores Activos",
+    "totalServers": "Total Servidores",
+    "uptime": "Uptime"
+  },
+  "menu": {
+    "createServer": "1. Crear Nuevo Servidor",
+    "activeServers": "2. Servidores Activos",
+    "archivedServers": "3. Servidores Archivados",
+    "globalSettings": "4. Configuración Global"
+  },
+  "settings": {
+    "language": "Idioma",
+    "theme": "Tema",
+    "backupPath": "Ruta de Backups",
+    "path": "Path",
+    "backupPathError": "Error: no se puede escribir en esa ruta"
+  },
+  "common": {
+    "comingSoon": "Coming Soon",
+    "comingSoonDescription": "estará disponible en un cambio futuro."
   }
 }

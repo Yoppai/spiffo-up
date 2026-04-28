@@ -1,6 +1,8 @@
-import { afterEach, describe, expect, it } from 'bun:test';
+import { afterEach, beforeAll, describe, expect, it } from 'bun:test';
 import React from 'react';
 import { render } from 'ink-testing-library';
+import i18next from 'i18next';
+import '../../i18n/config.js';
 import { App } from '../../cli/app.js';
 import { TuiFooter } from '../../components/footer.js';
 import { ApplyPendingChangesModal } from '../../components/pending-changes-modal.js';
@@ -18,6 +20,10 @@ const pendingChange: PendingChange = {
   oldValue: '8',
   newValue: '16',
 };
+
+beforeAll(async () => {
+  await i18next.changeLanguage('en');
+});
 
 afterEach(() => {
   useAppStore.getState().resetNavigation();
