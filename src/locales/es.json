@@ -31,11 +31,51 @@
     "language": "Idioma",
     "theme": "Tema",
     "backupPath": "Ruta de Backups",
-    "path": "Path",
+    "path": "Ruta",
     "backupPathError": "Error: no se puede escribir en esa ruta"
   },
   "common": {
     "comingSoon": "Coming Soon",
     "comingSoonDescription": "estará disponible en un cambio futuro."
+  },
+  "archived": {
+    "title": "Servidores Archivados",
+    "list": {
+      "name": "Nombre",
+      "provider": "Proveedor",
+      "archivedOn": "Archivado el",
+      "backupSize": "Tamaño Backup",
+      "status": "Estado",
+      "actions": "Acciones"
+    },
+    "detail": {
+      "provider": "Proveedor",
+      "projectId": "ID de Proyecto",
+      "instanceType": "Tipo de Instancia",
+      "zone": "Zona",
+      "staticIp": "IP Estática",
+      "gameBranch": "Rama de Juego",
+      "created": "Creado",
+      "archived": "Archivado",
+      "backupSection": "Backup",
+      "backupPath": "Ruta",
+      "backupSize": "Tamaño",
+      "backupStatus": "Estado",
+      "saved": "GUARDADO",
+      "missing": "FALTANTE",
+      "noBackupInfo": "No hay información de backup disponible",
+      "restore": "Restaurar Servidor",
+      "delete": "Eliminar Registro"
+    },
+    "empty": {
+      "title": "No se encontraron servidores archivados",
+      "description": "Los servidores archivados aparecerán aquí. Usa el menú de administración de servidores para archivar servidores activos."
+    },
+    "confirm": {
+      "title": "Eliminar Registro de Servidor",
+      "message": "Esta acción no se puede deshacer. El backup no será eliminado.",
+      "cancel": "Cancelar",
+      "confirm": "Eliminar"
+    }
   }
 }
