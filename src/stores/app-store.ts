@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { gcpRegions, instanceTiers, providerOptions, wizardSteps } from '../screens/create-server-wizard/catalog.js';
 import { validateWizardServerName } from '../services/create-server-wizard-service.js';
-import type { CreateServerWizardState, DashboardPanelUiState, NavigationState, NavigationTarget, PanelFocus, PendingChangesModalAction, PendingChangesModalMode, PendingChangesModalState, ServerMenuId } from '../types/index.js';
+import type { CreateServerWizardState, DashboardPanelUiState, GlobalRightMode, NavigationState, NavigationTarget, PanelFocus, PendingChangesModalAction, PendingChangesModalMode, PendingChangesModalState, ServerMenuId } from '../types/index.js';
 
 const ACTIVE_SERVERS_MENU_INDEX = 1;
 
@@ -12,6 +12,8 @@ const initialNavigation: NavigationState = {
   globalMenuIndex: ACTIVE_SERVERS_MENU_INDEX,
   serverMenuIndex: 0,
   activeServersCursor: 0,
+  globalRightCursor: 0,
+  globalRightMode: 'list',
 };
 
 const pendingModalActions: PendingChangesModalAction[] = ['apply', 'discard', 'back'];
@@ -65,6 +67,9 @@ interface AppState {
   moveGlobalMenu: (delta: number, itemCount: number) => void;
   moveServerMenu: (delta: number, itemCount: number) => void;
   moveActiveServersCursor: (delta: number, serverCount: number) => void;
+  moveGlobalRightCursor: (delta: number, itemCount: number) => void;
+  setGlobalRightMode: (mode: GlobalRightMode) => void;
+  resetGlobalRightUi: () => void;
   enterServerDashboard: () => void;
   exitServerDashboard: () => void;
   openPendingChangesModal: () => void;
@@ -117,6 +122,8 @@ export const useAppStore = create<AppState>((set) => ({
         ...state.navigation,
         globalMenuIndex: wrapIndex(state.navigation.globalMenuIndex + delta, itemCount),
         activeServersCursor: 0,
+        globalRightCursor: 0,
+        globalRightMode: 'list',
       },
     })),
   moveServerMenu: (delta, itemCount) =>
@@ -131,6 +138,29 @@ export const useAppStore = create<AppState>((set) => ({
       navigation: {
         ...state.navigation,
         activeServersCursor: wrapIndex(state.navigation.activeServersCursor + delta, serverCount),
+      },
+    })),
+  moveGlobalRightCursor: (delta, itemCount) =>
+    set((state) => ({
+      navigation: {
+        ...state.navigation,
+        globalRightCursor: wrapIndex(state.navigation.globalRightCursor + delta, itemCount),
+      },
+    })),
+  setGlobalRightMode: (globalRightMode) =>
+    set((state) => ({
+      navigation: {
+        ...state.navigation,
+        globalRightMode,
+        globalRightCursor: 0,
+      },
+    })),
+  resetGlobalRightUi: () =>
+    set((state) => ({
+      navigation: {
+        ...state.navigation,
+        globalRightCursor: 0,
+        globalRightMode: 'list',
       },
     })),
   enterServerDashboard: () =>
@@ -151,6 +181,8 @@ export const useAppStore = create<AppState>((set) => ({
         focusedPanel: 'left',
         globalMenuIndex: ACTIVE_SERVERS_MENU_INDEX,
         current: 'dashboard',
+        globalRightCursor: 0,
+        globalRightMode: 'list',
       },
       pendingChangesModal: initialPendingChangesModal,
     })),
@@ -277,6 +309,7 @@ export const useAppStore = create<AppState>((set) => ({
     }),
   setWizardStatusMessage: (statusMessage) => set((state) => ({ createServerWizard: { ...state.createServerWizard, statusMessage } })),
   resetNavigation: () => set({ navigation: initialNavigation, pendingChangesModal: initialPendingChangesModal, dashboardPanels: {}, createServerWizard: initialCreateServerWizard }),
+
 }));
 
 function wrapIndex(index: number, length: number): number {
