@@ -14,6 +14,7 @@ const initialNavigation: NavigationState = {
   activeServersCursor: 0,
   globalRightCursor: 0,
   globalRightMode: 'list',
+  globalRightConfirmAction: null,
 };
 
 const pendingModalActions: PendingChangesModalAction[] = ['apply', 'discard', 'back'];
@@ -100,6 +101,7 @@ interface AppState {
   previousWizardStep: () => void;
   setWizardStatusMessage: (statusMessage: string | null) => void;
   resetNavigation: () => void;
+  setGlobalRightConfirmAction: (action: string | null) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -309,6 +311,13 @@ export const useAppStore = create<AppState>((set) => ({
     }),
   setWizardStatusMessage: (statusMessage) => set((state) => ({ createServerWizard: { ...state.createServerWizard, statusMessage } })),
   resetNavigation: () => set({ navigation: initialNavigation, pendingChangesModal: initialPendingChangesModal, dashboardPanels: {}, createServerWizard: initialCreateServerWizard }),
+  setGlobalRightConfirmAction: (action) =>
+    set((state) => ({
+      navigation: {
+        ...state.navigation,
+        globalRightConfirmAction: action,
+      },
+    })),
 
 }));
 
