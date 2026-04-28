@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { AppSettings } from '../types/index.js';
+import { getLocalInventoryService } from '../services/index.js';
 
 interface SettingsState {
   settings: AppSettings;
@@ -13,6 +14,21 @@ const defaultSettings: AppSettings = { locale: 'es', theme: 'dark', backupPath: 
 export const useSettingsStore = create<SettingsState>((set) => ({
   settings: defaultSettings,
   setSettings: (settings) => set({ settings }),
-  updateSettings: (settings) => set((state) => ({ settings: { ...state.settings, ...settings } })),
-  resetSettings: () => set({ settings: defaultSettings }),
+  updateSettings: (settings) => {
+    set((state) => {
+      const merged = { ...state.settings, ...settings };
+      const inventory = getLocalInventoryService();
+      if (inventory) {
+        inventory.updateSettings(merged);
+      }
+      return { settings: merged };
+    });
+  },
+  resetSettings: () => {
+    const inventory = getLocalInventoryService();
+    if (inventory) {
+      inventory.updateSettings(defaultSettings);
+    }
+    set({ settings: defaultSettings });
+  },
 }));
