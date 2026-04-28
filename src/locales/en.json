@@ -1,5 +1,41 @@
 {
   "app": {
     "title": "Spiffo Up"
+  },
+  "header": {
+    "title": "SPIFFO-UP"
+  },
+  "footer": {
+    "esc": "[ESC] Back",
+    "navigate": "[↑↓] Navigate",
+    "tab": "[TAB] Switch Panel",
+    "enter": "[ENTER] Select",
+    "f1": "[F1] Help",
+    "ctrlA": "[Ctrl+A] Apply",
+    "quit": "[Q] Quit"
+  },
+  "systemStatus": {
+    "title": "System Status",
+    "version": "v{{version}}",
+    "activeServers": "Active Servers",
+    "totalServers": "Total Servers",
+    "uptime": "Uptime"
+  },
+  "menu": {
+    "createServer": "1. Create New Server",
+    "activeServers": "2. Active Servers",
+    "archivedServers": "3. Archived Servers",
+    "globalSettings": "4. Global Settings"
+  },
+  "settings": {
+    "language": "Language",
+    "theme": "Theme",
+    "backupPath": "Backup Path",
+    "path": "Path",
+    "backupPathError": "Error: cannot write to that path"
+  },
+  "common": {
+    "comingSoon": "Coming Soon",
+    "comingSoonDescription": "will be available in a future change."
   }
 }

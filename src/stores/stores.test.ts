@@ -91,6 +91,34 @@ describe('stores', () => {
     expect(useAppStore.getState().createServerWizard.stepIndex).toBe(0);
   });
 
+  it('tracks global right panel navigation', () => {
+    const app = useAppStore.getState();
+
+    app.moveGlobalRightCursor(1, 3);
+    expect(useAppStore.getState().navigation.globalRightCursor).toBe(1);
+
+    app.moveGlobalRightCursor(1, 3);
+    expect(useAppStore.getState().navigation.globalRightCursor).toBe(2);
+
+    app.moveGlobalRightCursor(1, 3);
+    expect(useAppStore.getState().navigation.globalRightCursor).toBe(0);
+
+    app.setGlobalRightMode('language');
+    expect(useAppStore.getState().navigation.globalRightMode).toBe('language');
+    expect(useAppStore.getState().navigation.globalRightCursor).toBe(0);
+
+    app.moveGlobalRightCursor(1, 2);
+    expect(useAppStore.getState().navigation.globalRightCursor).toBe(1);
+
+    app.resetGlobalRightUi();
+    expect(useAppStore.getState().navigation.globalRightMode).toBe('list');
+    expect(useAppStore.getState().navigation.globalRightCursor).toBe(0);
+
+    app.exitServerDashboard();
+    expect(useAppStore.getState().navigation.globalRightMode).toBe('list');
+    expect(useAppStore.getState().navigation.globalRightCursor).toBe(0);
+  });
+
   it('validates wizard server names', () => {
     expect(validateWizardServerName('')).toBe('Server name is required.');
     expect(validateWizardServerName('   ')).toBe('Server name is required.');

@@ -155,7 +155,7 @@ export interface PendingChangeApplyResult {
 
 export interface AppSettings {
   locale: 'en' | 'es';
-  theme: 'dark' | 'light';
+  theme: string;
   backupPath?: string;
 }
 
@@ -243,6 +243,8 @@ export interface CreateServerWizardState {
   statusMessage?: string | null;
 }
 
+export type GlobalRightMode = 'list' | 'language' | 'theme' | 'backup-path';
+
 export interface NavigationState {
   current: NavigationTarget;
   mode: DashboardMode;
@@ -250,6 +252,8 @@ export interface NavigationState {
   globalMenuIndex: number;
   serverMenuIndex: number;
   activeServersCursor: number;
+  globalRightCursor: number;
+  globalRightMode: GlobalRightMode;
 }
 
 export type DashboardSubView = 'main' | 'confirm' | 'details' | 'edit';
