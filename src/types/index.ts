@@ -67,6 +67,9 @@ export interface ServerRecord {
   createdAt?: string;
   updatedAt?: string;
   archived?: boolean;
+  backupPath?: string | null;
+  backupSize?: number | null;
+  archivedAt?: string | null;
 }
 
 export interface ServerDeployPorts {
@@ -243,7 +246,7 @@ export interface CreateServerWizardState {
   statusMessage?: string | null;
 }
 
-export type GlobalRightMode = 'list' | 'language' | 'theme' | 'backup-path';
+export type GlobalRightMode = 'list' | 'language' | 'theme' | 'backup-path' | 'archived-list' | 'archived-detail';
 
 export interface NavigationState {
   current: NavigationTarget;
@@ -254,6 +257,7 @@ export interface NavigationState {
   activeServersCursor: number;
   globalRightCursor: number;
   globalRightMode: GlobalRightMode;
+  globalRightConfirmAction?: string | null;
 }
 
 export type DashboardSubView = 'main' | 'confirm' | 'details' | 'edit';

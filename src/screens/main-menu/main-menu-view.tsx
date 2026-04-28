@@ -10,7 +10,7 @@ import type { GlobalMenuItem, ServerRecord } from '../../types/index.js';
 import { SelectableMenu } from '../../components/index.js';
 import { ServerList } from './server-list.js';
 import { GlobalSettingsPanel } from '../global-settings/global-settings-panel.js';
-import { ArchivedServersPanel } from './archived-servers-panel.js';
+import { ArchivedServersPanel } from '../archived-servers/archived-servers-panel.js';
 import { isActiveServer } from '../../lib/index.js';
 
 export function useGlobalMenuItems(): GlobalMenuItem[] {
