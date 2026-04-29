@@ -149,7 +149,7 @@ export const settingsRowsToDomain = (rows: SettingsRow[], defaults: PersistedSet
   const values = Object.fromEntries(rows.map((row) => [row.key, row.value]));
   return {
     locale: values.locale === 'en' ? 'en' : defaults.locale,
-    theme: values.theme === 'light' ? 'light' : defaults.theme,
+    theme: (values.theme && typeof values.theme === 'string') ? values.theme : defaults.theme,
     backupPath: values.backup_path ?? defaults.backupPath,
   };
 };
