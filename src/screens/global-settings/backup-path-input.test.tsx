@@ -1,11 +1,12 @@
 import { beforeAll, describe, expect, it } from 'bun:test';
 import React from 'react';
 import { render } from 'ink-testing-library';
+import '../../i18n/config.js';
+import i18next from 'i18next';
 import { BackupPathInput } from './backup-path-input.js';
 import { useSettingsStore } from '../../stores/settings-store.js';
 
 beforeAll(async () => {
-  const { default: i18next } = await import('i18next');
   await i18next.changeLanguage('es');
 });
 
