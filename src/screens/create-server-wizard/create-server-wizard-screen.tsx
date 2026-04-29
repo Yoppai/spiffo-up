@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Text } from 'ink';
 import { LayoutShell } from '../../components/index.js';
 import { useInkStore } from '../../hooks/use-ink-store.js';
+import { useTheme } from '../../hooks/use-theme.js';
 import { filteredInstanceCategories, formatGcpLatency, isActiveServer, recommendInstanceForMaxPlayers } from '../../lib/index.js';
 import { useAppStore } from '../../stores/app-store.js';
 import { usePendingChangesStore } from '../../stores/pending-changes-store.js';
@@ -21,6 +22,7 @@ export const CreateServerWizard: React.FC = () => {
   const pendingChanges = useInkStore(usePendingChangesStore, (state) => state.changes.length);
   const activeServers = servers.filter(isActiveServer);
   const currentStep = wizardSteps[wizard.stepIndex] ?? wizardSteps[0]!;
+  const { colors } = useTheme();
 
   return (
     <LayoutShell
@@ -30,8 +32,8 @@ export const CreateServerWizard: React.FC = () => {
       activeServers={activeServers.length}
       totalServers={servers.length}
       pendingChangesCount={pendingChanges}
-      left={<WizardStepper wizard={wizard} />}
-      right={<WizardStepContent wizard={wizard} />}
+      left={<WizardStepper wizard={wizard} colors={colors} />}
+      right={<WizardStepContent wizard={wizard} colors={colors} />}
     />
   );
 };
@@ -95,14 +97,14 @@ export function handleCreateServerWizardInput({
   if (key.return) confirmWizardAction(app);
 }
 
-function WizardStepper({ wizard }: { wizard: CreateServerWizardState }) {
+function WizardStepper({ wizard, colors }: { wizard: CreateServerWizardState; colors: ReturnType<typeof useTheme>['colors'] }) {
   return (
     <Box flexDirection="column">
       {wizardSteps.map((step, index) => {
         const active = wizard.stepIndex === index;
         const done = wizard.stepIndex > index;
         return (
-          <Text key={step.id} color={active ? 'cyan' : done ? 'green' : undefined} inverse={active}>
+          <Text key={step.id} color={active ? colors.focus : done ? colors.success : colors.text} inverse={active}>
             {active ? '>' : done ? '✓' : ' '} {index + 1}. {step.label}
           </Text>
         );
@@ -112,115 +114,115 @@ function WizardStepper({ wizard }: { wizard: CreateServerWizardState }) {
   );
 }
 
-function WizardStepContent({ wizard }: { wizard: CreateServerWizardState }) {
+function WizardStepContent({ wizard, colors }: { wizard: CreateServerWizardState; colors: ReturnType<typeof useTheme>['colors'] }) {
   const step = wizardSteps[wizard.stepIndex]?.id ?? 'provider';
 
   return (
     <Box flexDirection="column" gap={1}>
-      {step === 'provider' ? <ProviderStep wizard={wizard} /> : null}
-      {step === 'auth-project' ? <AuthProjectStep wizard={wizard} /> : null}
-      {step === 'server-name' ? <ServerNameStep wizard={wizard} /> : null}
-      {step === 'region' ? <RegionStep wizard={wizard} /> : null}
-      {step === 'instance' ? <InstanceStep wizard={wizard} /> : null}
-      {step === 'review' ? <ReviewStep wizard={wizard} /> : null}
-      {wizard.statusMessage ? <Text color="yellow">{wizard.statusMessage}</Text> : null}
+      {step === 'provider' ? <ProviderStep wizard={wizard} colors={colors} /> : null}
+      {step === 'auth-project' ? <AuthProjectStep wizard={wizard} colors={colors} /> : null}
+      {step === 'server-name' ? <ServerNameStep wizard={wizard} colors={colors} /> : null}
+      {step === 'region' ? <RegionStep wizard={wizard} colors={colors} /> : null}
+      {step === 'instance' ? <InstanceStep wizard={wizard} colors={colors} /> : null}
+      {step === 'review' ? <ReviewStep wizard={wizard} colors={colors} /> : null}
+      {wizard.statusMessage ? <Text color={colors.warning}>{wizard.statusMessage}</Text> : null}
     </Box>
   );
 }
 
-function ProviderStep({ wizard }: { wizard: CreateServerWizardState }) {
+function ProviderStep({ wizard, colors }: { wizard: CreateServerWizardState; colors: ReturnType<typeof useTheme>['colors'] }) {
   return (
     <Box flexDirection="column">
-      <Text>Select cloud provider for MVP:</Text>
+      <Text color={colors.text}>Select cloud provider for MVP:</Text>
       {providerOptions.map((provider, index) => (
-        <Text key={provider.id} color={wizard.providerCursor === index ? 'cyan' : provider.enabled ? undefined : 'gray'} inverse={wizard.providerCursor === index}>
+        <Text key={provider.id} color={wizard.providerCursor === index ? colors.focus : provider.enabled ? colors.text : colors.text} dimColor={!provider.enabled} inverse={wizard.providerCursor === index}>
           {wizard.providerCursor === index ? '>' : ' '} {provider.label} · {provider.statusLabel}
         </Text>
       ))}
-      <ActionRow actions={PROVIDER_ACTIONS} cursor={wizard.actionCursor} />
+      <ActionRow actions={PROVIDER_ACTIONS} cursor={wizard.actionCursor} colors={colors} />
     </Box>
   );
 }
 
-function AuthProjectStep({ wizard }: { wizard: CreateServerWizardState }) {
+function AuthProjectStep({ wizard, colors }: { wizard: CreateServerWizardState; colors: ReturnType<typeof useTheme>['colors'] }) {
   return (
     <Box flexDirection="column">
-      <Text>Local detection placeholder: {wizard.draft.projectId || 'No project detected'}</Text>
+      <Text color={colors.text}>Local detection placeholder: {wizard.draft.projectId || 'No project detected'}</Text>
       <Text dimColor>Edit project id (optional). It will be validated during future deploy.</Text>
-      <Text>Project id: {wizard.draft.projectId || '<optional>'}</Text>
-      <ActionRow actions={STEP_ACTIONS} cursor={wizard.actionCursor} />
+      <Text color={colors.text}>Project id: {wizard.draft.projectId || '<optional>'}</Text>
+      <ActionRow actions={STEP_ACTIONS} cursor={wizard.actionCursor} colors={colors} />
     </Box>
   );
 }
 
-function ServerNameStep({ wizard }: { wizard: CreateServerWizardState }) {
+function ServerNameStep({ wizard, colors }: { wizard: CreateServerWizardState; colors: ReturnType<typeof useTheme>['colors'] }) {
   return (
     <Box flexDirection="column">
-      <Text>Name: {wizard.draft.serverName || '<required>'}</Text>
-      {wizard.validationErrors.serverName ? <Text color="red">{wizard.validationErrors.serverName}</Text> : null}
+      <Text color={colors.text}>Name: {wizard.draft.serverName || '<required>'}</Text>
+      {wizard.validationErrors.serverName ? <Text color={colors.error}>{wizard.validationErrors.serverName}</Text> : null}
       <Text dimColor>Use letters, numbers, spaces, dots, underscores or dashes.</Text>
-      <ActionRow actions={STEP_ACTIONS} cursor={wizard.actionCursor} />
+      <ActionRow actions={STEP_ACTIONS} cursor={wizard.actionCursor} colors={colors} />
     </Box>
   );
 }
 
-function RegionStep({ wizard }: { wizard: CreateServerWizardState }) {
+function RegionStep({ wizard, colors }: { wizard: CreateServerWizardState; colors: ReturnType<typeof useTheme>['colors'] }) {
   const selectedRegion = gcpRegions[wizard.regionCursor] ?? gcpRegions[0]!;
   const selectedZone = selectedRegion.zones[wizard.zoneCursor] ?? selectedRegion.zones[0];
   return (
     <Box flexDirection="column">
-      <Text>GCP zones by continent · latency measured/fallback</Text>
+      <Text color={colors.text}>GCP zones by continent · latency measured/fallback</Text>
       {gcpRegions.map((region, index) => (
-        <Text key={region.id} color={wizard.regionCursor === index ? 'cyan' : undefined} inverse={wizard.regionCursor === index}>
+        <Text key={region.id} color={wizard.regionCursor === index ? colors.focus : colors.text} inverse={wizard.regionCursor === index}>
           {wizard.regionCursor === index ? '>' : ' '} {region.continent ?? 'gcp'} · {region.label} · {region.location}
         </Text>
       ))}
-      <Text>Zone: {selectedZone?.label ?? '-'} · {selectedZone?.latencyLabel ?? formatGcpLatency(undefined)}</Text>
-      <ActionRow actions={STEP_ACTIONS} cursor={wizard.actionCursor} />
+      <Text color={colors.text}>Zone: {selectedZone?.label ?? '-'} · {selectedZone?.latencyLabel ?? formatGcpLatency(undefined)}</Text>
+      <ActionRow actions={STEP_ACTIONS} cursor={wizard.actionCursor} colors={colors} />
     </Box>
   );
 }
 
-function InstanceStep({ wizard }: { wizard: CreateServerWizardState }) {
+function InstanceStep({ wizard, colors }: { wizard: CreateServerWizardState; colors: ReturnType<typeof useTheme>['colors'] }) {
   const recommendation = recommendInstanceForMaxPlayers(null);
   return (
     <Box flexDirection="column">
-      <Text>Curated Project Zomboid tiers · estimated local pricing</Text>
+      <Text color={colors.text}>Curated Project Zomboid tiers · estimated local pricing</Text>
       {instanceTiers.map((tier, index) => (
-        <Text key={tier.id} color={wizard.instanceCursor === index ? 'cyan' : undefined} inverse={wizard.instanceCursor === index}>
+        <Text key={tier.id} color={wizard.instanceCursor === index ? colors.focus : colors.text} inverse={wizard.instanceCursor === index}>
           {wizard.instanceCursor === index ? '>' : ' '} {tier.label}: {tier.instanceType} · {tier.vcpu} vCPU · {tier.ramGb}GB RAM · JVM {tier.jvmMemory} · {tier.estimatedHourlyCost} · {tier.estimatedMonthlyCost}{tier.instanceType === recommendation.instanceType ? ' · Recommended' : ''}
         </Text>
       ))}
       <Text dimColor>{instanceTiers[wizard.instanceCursor]?.playerGuidance}</Text>
       <Text dimColor>Advanced catalog: {filteredInstanceCategories.map((category) => category.label).join(', ')}</Text>
-      <ActionRow actions={STEP_ACTIONS} cursor={wizard.actionCursor} />
+      <ActionRow actions={STEP_ACTIONS} cursor={wizard.actionCursor} colors={colors} />
     </Box>
   );
 }
 
-function ReviewStep({ wizard }: { wizard: CreateServerWizardState }) {
+function ReviewStep({ wizard, colors }: { wizard: CreateServerWizardState; colors: ReturnType<typeof useTheme>['colors'] }) {
   const tier = instanceTiers.find((candidate) => candidate.instanceType === wizard.draft.instanceType);
   return (
     <Box flexDirection="column">
-      <Text color="green">Review local server draft</Text>
-      <Text>Provider: GCP</Text>
-      <Text>Project: {wizard.draft.projectId || 'No project detected / optional'}</Text>
-      <Text>Server name: {wizard.draft.serverName}</Text>
-      <Text>Region/zone: {wizard.draft.region} / {wizard.draft.zone}</Text>
-      <Text>Instance: {tier?.label ?? 'Selected'} · {wizard.draft.instanceType}</Text>
+      <Text color={colors.success}>Review local server draft</Text>
+      <Text color={colors.text}>Provider: GCP</Text>
+      <Text color={colors.text}>Project: {wizard.draft.projectId || 'No project detected / optional'}</Text>
+      <Text color={colors.text}>Server name: {wizard.draft.serverName}</Text>
+      <Text color={colors.text}>Region/zone: {wizard.draft.region} / {wizard.draft.zone}</Text>
+      <Text color={colors.text}>Instance: {tier?.label ?? 'Selected'} · {wizard.draft.instanceType}</Text>
       {wizard.draft.projectId ? <Text dimColor>Project id is a local placeholder and is not persisted until deploy support lands.</Text> : null}
-      <Text color="yellow">Creates local draft only; no Pulumi, SSH, SFTP or RCON will run.</Text>
+      <Text color={colors.warning}>Creates local draft only; no Pulumi, SSH, SFTP or RCON will run.</Text>
       <Text>Se creará el servidor en tu inventario local. Podrás desplegarlo desde su dashboard cuando el deploy esté disponible.</Text>
-      <ActionRow actions={REVIEW_ACTIONS} cursor={wizard.actionCursor} />
+      <ActionRow actions={REVIEW_ACTIONS} cursor={wizard.actionCursor} colors={colors} />
     </Box>
   );
 }
 
-function ActionRow({ actions, cursor }: { actions: ReadonlyArray<string>; cursor: number }) {
+function ActionRow({ actions, cursor, colors }: { actions: ReadonlyArray<string>; cursor: number; colors: ReturnType<typeof useTheme>['colors'] }) {
   return (
     <Box gap={2}>
       {actions.map((action, index) => (
-        <Text key={action} color={cursor === index ? 'cyan' : undefined} inverse={cursor === index}>[{action}]</Text>
+        <Text key={action} color={cursor === index ? colors.focus : colors.text} inverse={cursor === index}>[{action}]</Text>
       ))}
     </Box>
   );

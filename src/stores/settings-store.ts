@@ -9,7 +9,7 @@ interface SettingsState {
   resetSettings: () => void;
 }
 
-const defaultSettings: AppSettings = { locale: 'es', theme: 'dark', backupPath: '' };
+const defaultSettings: AppSettings = { locale: 'es', theme: 'default-dark', backupPath: '' };
 
 export const useSettingsStore = create<SettingsState>((set) => ({
   settings: defaultSettings,

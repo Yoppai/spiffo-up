@@ -1,23 +1,22 @@
+import rawPalette from './default-dark.json';
+
 export interface ThemePalette {
-  primary: string;
-  secondary: string;
-  background: string;
-  success: string;
-  warning: string;
-  error: string;
-  focus: string;
-  text: string;
-  accent: string;
+  name: string;
+  colors: {
+    primary: string;
+    secondary: string;
+    background: string;
+    success: string;
+    warning: string;
+    error: string;
+    focus: string;
+    text: string;
+    accent: string;
+    border: string;
+  };
 }
 
 export const defaultDarkTheme: ThemePalette = {
-  primary: 'cyan',
-  secondary: 'magenta',
-  background: 'black',
-  success: 'green',
-  warning: 'yellow',
-  error: 'red',
-  focus: 'blue',
-  text: 'white',
-  accent: 'green',
+  name: rawPalette.name,
+  colors: rawPalette.colors,
 };

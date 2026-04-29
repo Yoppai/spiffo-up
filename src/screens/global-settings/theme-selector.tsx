@@ -2,22 +2,22 @@ import React from 'react';
 import { Box, Text } from 'ink';
 import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../../stores/settings-store.js';
-
-const themes = [
-  { id: 'default-dark', label: 'Default Dark' },
-];
+import { themeRegistry } from '../../themes/theme-loader.js';
 
 export const ThemeSelector: React.FC<{ cursor: number }> = ({ cursor }) => {
   const { t } = useTranslation();
+  const registry = themeRegistry;
+  const themeIds = Object.keys(registry);
 
   return (
     <Box flexDirection="column">
       <Text bold>{t('settings.theme')}</Text>
-      {themes.map((theme, index) => {
+      {themeIds.map((themeId, index) => {
+        const palette = registry[themeId];
         const isSelected = index === cursor;
         return (
-          <Text key={theme.id} color={isSelected ? 'cyan' : undefined}>
-            {isSelected ? '> ' : '  '}{theme.label}
+          <Text key={themeId} color={isSelected ? 'cyan' : undefined}>
+            {isSelected ? '> ' : '  '}{palette?.name ?? 'Unknown'}
           </Text>
         );
       })}
@@ -26,6 +26,8 @@ export const ThemeSelector: React.FC<{ cursor: number }> = ({ cursor }) => {
 };
 
 export function applyThemeSelection(cursor: number): void {
-  const themeId = themes[cursor]?.id ?? 'default-dark';
+  const registry = themeRegistry;
+  const themeIds = Object.keys(registry);
+  const themeId = themeIds[cursor] ?? 'default-dark';
   useSettingsStore.getState().updateSettings({ theme: themeId });
 }

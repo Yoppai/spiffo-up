@@ -6,11 +6,12 @@ import { useInkStore } from '../../hooks/use-ink-store.js';
 import { useAppStore } from '../../stores/app-store.js';
 import { usePendingChangesStore } from '../../stores/pending-changes-store.js';
 import { useServersStore } from '../../stores/servers-store.js';
+import { useTheme } from '../../hooks/use-theme.js';
 import type { GlobalMenuItem, ServerRecord } from '../../types/index.js';
 import { SelectableMenu } from '../../components/index.js';
 import { ServerList } from './server-list.js';
 import { GlobalSettingsPanel } from '../global-settings/global-settings-panel.js';
-import { ArchivedServersPanel } from './archived-servers-panel.js';
+import { ArchivedServersPanel } from '../archived-servers/archived-servers-panel.js';
 import { isActiveServer } from '../../lib/index.js';
 
 export function useGlobalMenuItems(): GlobalMenuItem[] {
@@ -59,6 +60,7 @@ const GlobalPreview: React.FC<{ selectedMenu: GlobalMenuItem; servers: ServerRec
   cursor,
 }) => {
   const { t } = useTranslation();
+  const { colors } = useTheme();
 
   if (selectedMenu.id === 'global-settings') {
     return <GlobalSettingsPanel />;
@@ -71,7 +73,7 @@ const GlobalPreview: React.FC<{ selectedMenu: GlobalMenuItem; servers: ServerRec
   if (selectedMenu.id === 'create-server') {
     return (
       <Box flexDirection="column">
-        <Text color="yellow">{t('common.comingSoon')}</Text>
+        <Text color={colors.warning}>{t('common.comingSoon')}</Text>
         <Text>{selectedMenu.rightPanelTitle} {t('common.comingSoonDescription')}</Text>
       </Box>
     );

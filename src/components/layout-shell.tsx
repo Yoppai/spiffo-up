@@ -6,6 +6,7 @@ import { TuiFooter } from './footer.js';
 import { TuiHeader } from './header.js';
 import { TitledPanel } from './titled-panel.js';
 import { SystemStatus } from './system-status.js';
+import { useTheme } from '../hooks/use-theme.js';
 
 interface LayoutShellProps {
   leftTitle: string;
@@ -33,6 +34,7 @@ export const LayoutShell: React.FC<LayoutShellProps> = ({
   height = process.stdout.rows,
 }) => {
   const dimensions = calculateLayoutDimensions(width, height);
+  const { colors } = useTheme();
 
   if (dimensions.isTooSmall) {
     return (
@@ -46,7 +48,7 @@ export const LayoutShell: React.FC<LayoutShellProps> = ({
   const contentHeight = Math.max(8, dimensions.height - 13);
 
   return (
-    <Box flexDirection="column" width={dimensions.width} minHeight={dimensions.height}>
+    <Box flexDirection="column" width={dimensions.width} minHeight={dimensions.height} backgroundColor={colors.background}>
       <TuiHeader />
       <SystemStatus version="1.0.0" activeServers={activeServers} totalServers={totalServers} />
       <Box flexGrow={1} minHeight={contentHeight}>

@@ -37,5 +37,45 @@
   "common": {
     "comingSoon": "Coming Soon",
     "comingSoonDescription": "will be available in a future change."
+  },
+  "archived": {
+    "title": "Archived Servers",
+    "list": {
+      "name": "Name",
+      "provider": "Provider",
+      "archivedOn": "Archived On",
+      "backupSize": "Backup Size",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "detail": {
+      "provider": "Provider",
+      "projectId": "Project ID",
+      "instanceType": "Instance Type",
+      "zone": "Zone",
+      "staticIp": "Static IP",
+      "gameBranch": "Game Branch",
+      "created": "Created",
+      "archived": "Archived",
+      "backupSection": "Backup",
+      "backupPath": "Path",
+      "backupSize": "Size",
+      "backupStatus": "Status",
+      "saved": "SAVED",
+      "missing": "MISSING",
+      "noBackupInfo": "No backup information available",
+      "restore": "Restore Server",
+      "delete": "Delete Record"
+    },
+    "empty": {
+      "title": "No archived servers found",
+      "description": "Servers that have been archived will appear here. Use the server management menu to archive active servers."
+    },
+    "confirm": {
+      "title": "Delete Server Record",
+      "message": "This action cannot be undone. The backup will not be removed.",
+      "cancel": "Cancel",
+      "confirm": "Delete"
+    }
   }
 }

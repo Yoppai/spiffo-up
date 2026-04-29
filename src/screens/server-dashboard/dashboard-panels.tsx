@@ -7,6 +7,7 @@ import type { usePendingChangesStore } from '../../stores/pending-changes-store.
 import { useServersStore } from '../../stores/servers-store.js';
 import { getLocalInventoryService, hydrateStoresFromInventory, ServerLifecycleService } from '../../services/index.js';
 import { PulumiCliManager } from '../../infrastructure/pulumi/pulumi-cli-manager.js';
+import { useTheme } from '../../hooks/use-theme.js';
 
 const defaultUi: DashboardPanelUiState = { rightCursor: 0, rightActionCursor: 0, subView: 'main', drafts: {}, validationErrors: {}, statusMessage: null, confirmAction: null };
 const regions = gcpRegionsCatalog.map((region) => region.id);
@@ -20,15 +21,16 @@ export function getPanelUi(panels: Partial<Record<ServerMenuId, DashboardPanelUi
 }
 
 export const DashboardPanel: React.FC<{ selectedMenu: ServerMenuItem; server: ServerRecord; pendingChangesCount: number; ui: DashboardPanelUiState }> = ({ selectedMenu, server, pendingChangesCount, ui }) => {
-  const banner = pendingChangesCount > 0 ? <PendingChangesBanner count={pendingChangesCount} /> : null;
-  if (selectedMenu.id === 'back-to-servers') return <Text color="cyan">Press Enter to return to Active Servers.</Text>;
+  const theme = useTheme();
+  const banner = pendingChangesCount > 0 ? <PendingChangesBanner count={pendingChangesCount} theme={theme} /> : null;
+  if (selectedMenu.id === 'back-to-servers') return <Text color={theme.colors.focus}>Press Enter to return to Active Servers.</Text>;
 
   return (
     <Box flexDirection="column">
       {banner}
-      {renderPanel(selectedMenu.id, server, ui, pendingChangesCount)}
-      {ui.statusMessage ? <Text color="green">Status: {ui.statusMessage}</Text> : null}
-      {Object.values(ui.validationErrors).filter(Boolean).map((error) => <Text key={error} color="red">Error: {error}</Text>)}
+      {renderPanel(selectedMenu.id, server, ui, pendingChangesCount, theme)}
+      {ui.statusMessage ? <Text color={theme.colors.success}>Status: {ui.statusMessage}</Text> : null}
+      {Object.values(ui.validationErrors).filter(Boolean).map((error) => <Text key={error} color={theme.colors.error}>Error: {error}</Text>)}
     </Box>
   );
 };
@@ -51,53 +53,53 @@ export function handleDashboardPanelInput({ app, pendingStore, input, key, serve
 
 type DashboardKey = { upArrow?: boolean; downArrow?: boolean; leftArrow?: boolean; rightArrow?: boolean; return?: boolean; backspace?: boolean; delete?: boolean };
 
-function renderPanel(panel: ServerMenuId, server: ServerRecord, ui: DashboardPanelUiState, pendingChangesCount: number): React.ReactNode {
+function renderPanel(panel: ServerMenuId, server: ServerRecord, ui: DashboardPanelUiState, pendingChangesCount: number, theme: ReturnType<typeof useTheme>): React.ReactNode {
   switch (panel) {
     case 'server-management':
-      return <ServerManagementPanel server={server} ui={ui} pendingChangesCount={pendingChangesCount} />;
+      return <ServerManagementPanel server={server} ui={ui} pendingChangesCount={pendingChangesCount} theme={theme} />;
     case 'provider-region':
-      return <ProviderRegionPanel server={server} ui={ui} />;
+      return <ProviderRegionPanel server={server} ui={ui} theme={theme} />;
     case 'build':
-      return <BuildPanel server={server} ui={ui} />;
+      return <BuildPanel server={server} ui={ui} theme={theme} />;
     case 'players':
-      return <PlayersPanel server={server} ui={ui} />;
+      return <PlayersPanel server={server} ui={ui} theme={theme} />;
     case 'stats':
-      return <StatsPanel server={server} ui={ui} />;
+      return <StatsPanel server={server} ui={ui} theme={theme} />;
     case 'basic-settings':
-      return <BasicSettingsPanel server={server} ui={ui} />;
+      return <BasicSettingsPanel server={server} ui={ui} theme={theme} />;
     case 'advanced-settings':
-      return <AdvancedSettingsPanel server={server} ui={ui} />;
+      return <AdvancedSettingsPanel server={server} ui={ui} theme={theme} />;
     case 'admins':
-      return <AdminsPanel ui={ui} />;
+      return <AdminsPanel ui={ui} theme={theme} />;
     case 'scheduler':
-      return <SchedulerPanel server={server} ui={ui} />;
+      return <SchedulerPanel server={server} ui={ui} theme={theme} />;
     case 'backups':
-      return <BackupsPanel server={server} ui={ui} />;
+      return <BackupsPanel server={server} ui={ui} theme={theme} />;
     default:
       return null;
   }
 }
 
-function ServerManagementPanel({ server, ui, pendingChangesCount }: { server: ServerRecord; ui: DashboardPanelUiState; pendingChangesCount: number }) {
+function ServerManagementPanel({ server, ui, pendingChangesCount, theme }: { server: ServerRecord; ui: DashboardPanelUiState; pendingChangesCount: number; theme: ReturnType<typeof useTheme> }) {
   const actions = ['Deploy', server.status === 'running' ? 'Stop' : 'Start', 'Update', 'Archive'];
   const pulumiLabel = ui.drafts.pulumiStatus ? `(${ui.drafts.pulumiStatus})` : '';
   return <>
-    <Text>Status:   {formatServerStatus(server)} · {server.provider === 'gcp' ? 'GCP lifecycle boundary' : 'Mock adapter ready'}</Text>
-    <Text>IP:       {server.publicIp ?? '-'}</Text>
-    <Text>Ports:    game {server.gamePort ?? '-'} / query {server.queryPort ?? '-'} / rcon {server.rconPort ?? '-'}</Text>
-    <Text>RCON:     {formatRconExposure(server)}</Text>
-    <Text>Pulumi:   {pulumiLabel || '-'}</Text>
-    <Text>Branch:   {server.branch}</Text>
-    <Text>Players:  {formatServerPlayers(server)}</Text>
-    {pendingChangesCount > 0 ? <Text color="cyan">Apply All Changes ({pendingChangesCount})</Text> : null}
-    <ActionRow actions={actions} selected={ui.rightActionCursor} />
-    {ui.confirmAction === 'Deploy' ? <Text color="yellow">Confirm Deploy? Press Enter again to create billable GCP resources.</Text> : null}
-    {ui.confirmAction === 'Install Pulumi' ? <Text color="yellow">Pulumi CLI missing. Press Enter to install.</Text> : null}
-    {ui.confirmAction === 'Archive' ? <Text color="red">Confirm Archive? Press Enter again (Stub, no remote side effects).</Text> : null}
+    <Text color={theme.colors.text}>Status:   {formatServerStatus(server)} · {server.provider === 'gcp' ? 'GCP lifecycle boundary' : 'Mock adapter ready'}</Text>
+    <Text color={theme.colors.text}>IP:       {server.publicIp ?? '-'}</Text>
+    <Text color={theme.colors.text}>Ports:    game {server.gamePort ?? '-'} / query {server.queryPort ?? '-'} / rcon {server.rconPort ?? '-'}</Text>
+    <Text color={theme.colors.text}>RCON:     {formatRconExposure(server)}</Text>
+    <Text color={theme.colors.text}>Pulumi:   {pulumiLabel || '-'}</Text>
+    <Text color={theme.colors.text}>Branch:   {server.branch}</Text>
+    <Text color={theme.colors.text}>Players:  {formatServerPlayers(server)}</Text>
+    {pendingChangesCount > 0 ? <Text color={theme.colors.focus}>Apply All Changes ({pendingChangesCount})</Text> : null}
+    <ActionRow actions={actions} selected={ui.rightActionCursor} theme={theme} />
+    {ui.confirmAction === 'Deploy' ? <Text color={theme.colors.warning}>Confirm Deploy? Press Enter again to create billable GCP resources.</Text> : null}
+    {ui.confirmAction === 'Install Pulumi' ? <Text color={theme.colors.warning}>Pulumi CLI missing. Press Enter to install.</Text> : null}
+    {ui.confirmAction === 'Archive' ? <Text color={theme.colors.error}>Confirm Archive? Press Enter again (Stub, no remote side effects).</Text> : null}
   </>;
 }
 
-function ProviderRegionPanel({ server, ui }: { server: ServerRecord; ui: DashboardPanelUiState }) {
+function ProviderRegionPanel({ server, ui, theme }: { server: ServerRecord; ui: DashboardPanelUiState; theme: ReturnType<typeof useTheme> }) {
   const region = ui.drafts.region ?? server.region ?? regions[0]!;
   const instanceType = ui.drafts.instanceType ?? server.instanceType;
   const regionMetadata = gcpRegionsCatalog.find((candidate) => candidate.id === region) ?? gcpRegionsCatalog[0]!;
@@ -106,107 +108,107 @@ function ProviderRegionPanel({ server, ui }: { server: ServerRecord; ui: Dashboa
   const cost = estimateGcpInstanceCost(instanceType);
   const recommendation = recommendInstanceForMaxPlayers(server.playersMax ?? undefined);
   return <>
-    <Text>Provider: GCP MVP · AWS Coming Soon · Azure Coming Soon</Text>
-    <CursorLine active={ui.rightCursor === 0}>Region: {region} · {regionMetadata.continent} · {regionMetadata.location} · {zone ? formatGcpLatency(undefined, zone.fallbackLatencyMs) : 'measuring...'} (←→ choose, Enter queue)</CursorLine>
-    <CursorLine active={ui.rightCursor === 1}>Instance: {instanceMetadata ? `${instanceMetadata.label} (${instanceType})` : formatInstanceTier(instanceType)} · {instanceMetadata?.vcpu ?? '?'} vCPU · {instanceMetadata?.ramGb ?? '?'}GB (←→ choose, Enter queue)</CursorLine>
-    <Text>Estimated cost: {cost.hourlyLabel} · {cost.monthlyLabel} · local estimate</Text>
-    <Text color="gray">Recommendation: {recommendation.tierLabel} · {recommendation.instanceType} for {server.playersMax ?? 20} MaxPlayers.</Text>
+    <Text color={theme.colors.text}>Provider: GCP MVP · AWS Coming Soon · Azure Coming Soon</Text>
+    <CursorLine active={ui.rightCursor === 0} theme={theme}>Region: {region} · {regionMetadata.continent} · {regionMetadata.location} · {zone ? formatGcpLatency(undefined, zone.fallbackLatencyMs) : 'measuring...'} (←→ choose, Enter queue)</CursorLine>
+    <CursorLine active={ui.rightCursor === 1} theme={theme}>Instance: {instanceMetadata ? `${instanceMetadata.label} (${instanceType})` : formatInstanceTier(instanceType)} · {instanceMetadata?.vcpu ?? '?'} vCPU · {instanceMetadata?.ramGb ?? '?'}GB (←→ choose, Enter queue)</CursorLine>
+    <Text color={theme.colors.text}>Estimated cost: {cost.hourlyLabel} · {cost.monthlyLabel} · local estimate</Text>
+    <Text color={theme.colors.text} dimColor>Recommendation: {recommendation.tierLabel} · {recommendation.instanceType} for {server.playersMax ?? 20} MaxPlayers.</Text>
   </>;
 }
 
-function BuildPanel({ server, ui }: { server: ServerRecord; ui: DashboardPanelUiState }) {
+function BuildPanel({ server, ui, theme }: { server: ServerRecord; ui: DashboardPanelUiState; theme: ReturnType<typeof useTheme> }) {
   const branch = (ui.drafts.branch as ServerRecord['branch'] | undefined) ?? server.branch;
   return <>
-    <Text>Current branch: {server.branch}</Text>
-    <CursorLine active>Selected branch: {branch} (←→ stable/unstable/outdatedunstable)</CursorLine>
-    <Text>Image tag: {buildImageTag(branch)}</Text>
-    <Text color="cyan">Press Enter to Queue Changes</Text>
+    <Text color={theme.colors.text}>Current branch: {server.branch}</Text>
+    <CursorLine active theme={theme}>Selected branch: {branch} (←→ stable/unstable/outdatedunstable)</CursorLine>
+    <Text color={theme.colors.text}>Image tag: {buildImageTag(branch)}</Text>
+    <Text color={theme.colors.focus}>Press Enter to Queue Changes</Text>
   </>;
 }
 
-function PlayersPanel({ server, ui }: { server: ServerRecord; ui: DashboardPanelUiState }) {
+function PlayersPanel({ server, ui, theme }: { server: ServerRecord; ui: DashboardPanelUiState; theme: ReturnType<typeof useTheme> }) {
   const players = dashboardMockAdapter.listPlayers(server);
   const actions = ['Message', 'Kick', 'Ban'];
   return <>
-    <Text>Connected players · Mock</Text>
-    {players.map((player, index) => <CursorLine key={player.id} active={ui.rightCursor === index}>{player.username} · {player.status} · {player.pingMs}ms</CursorLine>)}
-    <ActionRow actions={actions} selected={ui.rightActionCursor} />
-    {ui.confirmAction ? <Text color="red">Confirm {ui.confirmAction}? Press Enter again (Stub).</Text> : null}
+    <Text color={theme.colors.text}>Connected players · Mock</Text>
+    {players.map((player, index) => <CursorLine key={player.id} active={ui.rightCursor === index} theme={theme}>{player.username} · {player.status} · {player.pingMs}ms</CursorLine>)}
+    <ActionRow actions={actions} selected={ui.rightActionCursor} theme={theme} />
+    {ui.confirmAction ? <Text color={theme.colors.error}>Confirm {ui.confirmAction}? Press Enter again (Stub).</Text> : null}
   </>;
 }
 
-function StatsPanel({ server, ui }: { server: ServerRecord; ui: DashboardPanelUiState }) {
+function StatsPanel({ server, ui, theme }: { server: ServerRecord; ui: DashboardPanelUiState; theme: ReturnType<typeof useTheme> }) {
   const snapshot = dashboardMockAdapter.getStatsSnapshot(server, Number(ui.drafts.refreshCount ?? 0));
   return <>
-    <Text>Container metrics · Mock</Text>
-    <Text>CPU: {snapshot.cpu}</Text><Text>Memory: {snapshot.memory}</Text><Text>Network: {snapshot.network}</Text><Text>Disk I/O: {snapshot.diskIo}</Text>
-    <Text>Logs snapshot:</Text>{snapshot.logs.map((line) => <Text key={line}>  {line}</Text>)}
-    <ActionRow actions={['Refresh Stats', 'Logs View']} selected={ui.rightActionCursor} />
-    {ui.subView === 'details' ? <Text color="cyan">Logs sub-view Stub: static mock snapshot only.</Text> : null}
+    <Text color={theme.colors.text}>Container metrics · Mock</Text>
+    <Text color={theme.colors.text}>CPU: {snapshot.cpu}</Text><Text color={theme.colors.text}>Memory: {snapshot.memory}</Text><Text color={theme.colors.text}>Network: {snapshot.network}</Text><Text color={theme.colors.text}>Disk I/O: {snapshot.diskIo}</Text>
+    <Text color={theme.colors.text}>Logs snapshot:</Text>{snapshot.logs.map((line) => <Text key={line} color={theme.colors.text}>  {line}</Text>)}
+    <ActionRow actions={['Refresh Stats', 'Logs View']} selected={ui.rightActionCursor} theme={theme} />
+    {ui.subView === 'details' ? <Text color={theme.colors.focus}>Logs sub-view Stub: static mock snapshot only.</Text> : null}
   </>;
 }
 
-function BasicSettingsPanel({ server, ui }: { server: ServerRecord; ui: DashboardPanelUiState }) {
+function BasicSettingsPanel({ server, ui, theme }: { server: ServerRecord; ui: DashboardPanelUiState; theme: ReturnType<typeof useTheme> }) {
   const values = basicDefaults(server, ui);
-  return <FormPanel title="Basic Settings" fields={[['serverName', values.serverName], ['publicName', values.publicName], ['description', values.description], ['serverPassword', mask(values.serverPassword)], ['publicListing', values.publicListing]]} ui={ui} />;
+  return <FormPanel title="Basic Settings" fields={[['serverName', values.serverName], ['publicName', values.publicName], ['description', values.description], ['serverPassword', mask(values.serverPassword)], ['publicListing', values.publicListing]]} ui={ui} theme={theme} />;
 }
 
-function AdvancedSettingsPanel({ server, ui }: { server: ServerRecord; ui: DashboardPanelUiState }) {
+function AdvancedSettingsPanel({ server, ui, theme }: { server: ServerRecord; ui: DashboardPanelUiState; theme: ReturnType<typeof useTheme> }) {
   const files = dashboardMockAdapter.listAdvancedFiles(server);
   const selected = files[ui.rightCursor] ?? files[0]!;
   return <>
-    <Text>Config files · Mock SFTP boundary</Text>
-    {files.map((file, index) => <CursorLine key={file.id} active={ui.rightCursor === index}>{file.filename} · {file.description}</CursorLine>)}
-    <ActionRow actions={['Edit', 'Replace', 'Download']} selected={ui.rightActionCursor} />
-    {ui.subView === 'edit' ? <><Text color="cyan">Mock edit preview for {selected.filename}</Text>{selected.mockPreview.map((line) => <Text key={line}>  {line}</Text>)}<Text>Queue File Change Stub</Text></> : null}
+    <Text color={theme.colors.text}>Config files · Mock SFTP boundary</Text>
+    {files.map((file, index) => <CursorLine key={file.id} active={ui.rightCursor === index} theme={theme}>{file.filename} · {file.description}</CursorLine>)}
+    <ActionRow actions={['Edit', 'Replace', 'Download']} selected={ui.rightActionCursor} theme={theme} />
+    {ui.subView === 'edit' ? <><Text color={theme.colors.focus}>Mock edit preview for {selected.filename}</Text>{selected.mockPreview.map((line) => <Text key={line} color={theme.colors.text}>  {line}</Text>)}<Text color={theme.colors.text}>Queue File Change Stub</Text></> : null}
   </>;
 }
 
-function AdminsPanel({ ui }: { ui: DashboardPanelUiState }) {
+function AdminsPanel({ ui, theme }: { ui: DashboardPanelUiState; theme: ReturnType<typeof useTheme> }) {
   const username = ui.drafts.adminUsername ?? 'admin';
   const password = ui.drafts.adminPassword ?? '';
-  return <FormPanel title="Admins" fields={[['adminUsername', username], ['adminPassword', mask(password)]]} ui={ui} />;
+  return <FormPanel title="Admins" fields={[['adminUsername', username], ['adminPassword', mask(password)]]} ui={ui} theme={theme} />;
 }
 
-function SchedulerPanel({ server, ui }: { server: ServerRecord; ui: DashboardPanelUiState }) {
+function SchedulerPanel({ server, ui, theme }: { server: ServerRecord; ui: DashboardPanelUiState; theme: ReturnType<typeof useTheme> }) {
   const tasks = dashboardMockAdapter.listScheduledTasks(server);
   const selected = tasks[ui.rightCursor] ?? tasks[0]!;
   return <>
-    <Text>Scheduled tasks · Mock local stub</Text>
-    {tasks.map((task, index) => <CursorLine key={task.id} active={ui.rightCursor === index}>{task.name} · {task.type} · {task.cron} · {task.enabled ? 'enabled' : 'disabled'}</CursorLine>)}
-    <ActionRow actions={['Create', 'Edit', 'Toggle', 'Delete']} selected={ui.rightActionCursor} />
-    {ui.subView === 'edit' ? <Text color="cyan">Edit cron: {ui.drafts.cron ?? selected.cron} (type, Enter save stub)</Text> : null}
-    {ui.confirmAction === 'Delete' ? <Text color="red">Confirm Delete scheduled task? Press Enter again.</Text> : null}
+    <Text color={theme.colors.text}>Scheduled tasks · Mock local stub</Text>
+    {tasks.map((task, index) => <CursorLine key={task.id} active={ui.rightCursor === index} theme={theme}>{task.name} · {task.type} · {task.cron} · {task.enabled ? 'enabled' : 'disabled'}</CursorLine>)}
+    <ActionRow actions={['Create', 'Edit', 'Toggle', 'Delete']} selected={ui.rightActionCursor} theme={theme} />
+    {ui.subView === 'edit' ? <Text color={theme.colors.focus}>Edit cron: {ui.drafts.cron ?? selected.cron} (type, Enter save stub)</Text> : null}
+    {ui.confirmAction === 'Delete' ? <Text color={theme.colors.error}>Confirm Delete scheduled task? Press Enter again.</Text> : null}
   </>;
 }
 
-function BackupsPanel({ server, ui }: { server: ServerRecord; ui: DashboardPanelUiState }) {
+function BackupsPanel({ server, ui, theme }: { server: ServerRecord; ui: DashboardPanelUiState; theme: ReturnType<typeof useTheme> }) {
   const backups = dashboardMockAdapter.listBackups(server);
   return <>
-    <Text>Backup history · Mock local path /var/backups/{server.name}</Text>
-    {backups.map((backup, index) => <CursorLine key={backup.id} active={ui.rightCursor === index}>{backup.createdAt} · {backup.size} · {backup.type} · {backup.status}</CursorLine>)}
-    <ActionRow actions={['Create Backup', 'Restore', 'Delete']} selected={ui.rightActionCursor} />
-    {ui.confirmAction ? <Text color="red">Confirm {ui.confirmAction}? Press Enter again (Stub).</Text> : null}
+    <Text color={theme.colors.text}>Backup history · Mock local path /var/backups/{server.name}</Text>
+    {backups.map((backup, index) => <CursorLine key={backup.id} active={ui.rightCursor === index} theme={theme}>{backup.createdAt} · {backup.size} · {backup.type} · {backup.status}</CursorLine>)}
+    <ActionRow actions={['Create Backup', 'Restore', 'Delete']} selected={ui.rightActionCursor} theme={theme} />
+    {ui.confirmAction ? <Text color={theme.colors.error}>Confirm {ui.confirmAction}? Press Enter again (Stub).</Text> : null}
   </>;
 }
 
-function FormPanel({ title, fields, ui }: { title: string; fields: [string, string][]; ui: DashboardPanelUiState }) {
+function FormPanel({ title, fields, ui, theme }: { title: string; fields: [string, string][]; ui: DashboardPanelUiState; theme: ReturnType<typeof useTheme> }) {
   return <>
-    <Text>{title} · Drafts local until Queue Changes</Text>
-    {fields.map(([field, value], index) => <CursorLine key={field} active={ui.rightCursor === index}>{field}: {value || '-'}</CursorLine>)}
-    <CursorLine active={ui.rightCursor === fields.length}>Queue Changes</CursorLine>
+    <Text color={theme.colors.text}>{title} · Drafts local until Queue Changes</Text>
+    {fields.map(([field, value], index) => <CursorLine key={field} active={ui.rightCursor === index} theme={theme}>{field}: {value || '-'}</CursorLine>)}
+    <CursorLine active={ui.rightCursor === fields.length} theme={theme}>Queue Changes</CursorLine>
   </>;
 }
 
-function ActionRow({ actions, selected }: { actions: string[]; selected: number }) {
-  return <Text color="cyan">{actions.map((action, index) => `${index === selected ? '>' : ' '}[${action}]`).join('  ')}</Text>;
+function ActionRow({ actions, selected, theme }: { actions: string[]; selected: number; theme: ReturnType<typeof useTheme> }) {
+  return <Text color={theme.colors.focus}>{actions.map((action, index) => `${index === selected ? '>' : ' '}[${action}]`).join('  ')}</Text>;
 }
 
-const CursorLine: React.FC<{ active: boolean; children: React.ReactNode }> = ({ active, children }) => <Text color={active ? 'cyan' : undefined}>{active ? '> ' : '  '}{children}</Text>;
+const CursorLine: React.FC<{ active: boolean; children: React.ReactNode; theme: ReturnType<typeof useTheme> }> = ({ active, children, theme }) => <Text color={active ? theme.colors.focus : theme.colors.text}>{active ? '> ' : '  '}{children}</Text>;
 
-export const PendingChangesBanner: React.FC<{ count: number }> = ({ count }) => (
-  <Box borderStyle="round" borderColor="yellow" paddingX={1} marginBottom={1}>
-    <Text color="yellow">{count} pending changes · Press Ctrl+A to apply</Text>
+export const PendingChangesBanner: React.FC<{ count: number; theme: ReturnType<typeof useTheme> }> = ({ count, theme }) => (
+  <Box borderStyle="round" borderColor={theme.colors.warning} paddingX={1} marginBottom={1}>
+    <Text color={theme.colors.warning}>{count} pending changes · Press Ctrl+A to apply</Text>
   </Box>
 );
 

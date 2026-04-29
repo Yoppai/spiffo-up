@@ -1,6 +1,7 @@
 import type { NavigationState } from '../../types/index.js';
 import type { useAppStore } from '../../stores/app-store.js';
 import { applyLanguageSelection, applyThemeSelection } from '../global-settings/global-settings-panel.js';
+import { themeRegistry } from '../../themes/theme-loader.js';
 
 const GLOBAL_SETTINGS_OPTIONS_COUNT = 3;
 
@@ -43,8 +44,9 @@ export function handleGlobalSettingsInput({ app, key, navigation, input }: Globa
       app.setGlobalRightMode('list');
       return;
     }
-    if (key.upArrow) app.moveGlobalRightCursor(-1, 1);
-    if (key.downArrow) app.moveGlobalRightCursor(1, 1);
+    const themeCount = Object.keys(themeRegistry).length;
+    if (key.upArrow) app.moveGlobalRightCursor(-1, Math.max(themeCount, 1));
+    if (key.downArrow) app.moveGlobalRightCursor(1, Math.max(themeCount, 1));
     if (key.return) {
       applyThemeSelection(navigation.globalRightCursor);
       app.setGlobalRightMode('list');

@@ -6,7 +6,7 @@
   "type": "module",
   "bin": {
     "spiffo-up": "./index.tsx"
-    },
+  },
   "scripts": {
     "dev": "bun --watch run index.tsx",
     "start": "bun run index.tsx",
@@ -25,7 +25,7 @@
     "react-devtools-core": "^7.0.1"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^6.0.3"
   },
   "dependencies": {
     "@byteland/ink-scroll-bar": "^1.0.0",
