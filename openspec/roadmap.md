@@ -1,6 +1,6 @@
 # Roadmap OpenSpec: Zomboid-CLI Multi-Cloud Orchestrator
 
-> **Roadmap v0.4** | Última actualización: 2026-04-28  
+> **Roadmap v0.5** | Última actualización: 2026-04-29  
 > Basado en `openspec/PRD.md` v1.0.  
 > Cada change es verificable de forma aislada o con sus dependencias ya completadas.
 
@@ -10,6 +10,7 @@
 
 | Versión | Fecha | Cambio |
 | :--- | :--- | :--- |
+| v0.5 | 2026-04-29 | ch-03 completado y archivado; specs theme-core, theme-loader, theme-selector-preview sincronizados como main specs |
 | v0.4 | 2026-04-28 | ch-01 y ch-02 completados y archivados; specs global-settings-screen, i18n-core, theme-core sincronizados |
 | v0.3 | 2026-04-27 | Alineación con código real: columna Spec, estados corregidos (parcial/in progress), notas técnicas de mocks, dependencias de SSH como bloqueante, criterios ajustados |
 | v0.2 | 2026-04-27 | Corrección de dependencias (ch-14 → Fase 3), separación Fase 4/5, criterios binarios, columna Estado |
@@ -24,6 +25,7 @@
 | `ch-00` | TUI Layout Shell (router, layout 35/65, header, status bar, footer) | [`specs/tui-layout-shell`](specs/tui-layout-shell/spec.md) | `2026-04-26` |
 | `ch-01` | Pantalla Configuración Global (idioma, tema, backup path) | [`specs/global-settings-screen`](specs/global-settings-screen/spec.md) | `2026-04-28` |
 | `ch-02` | Pantalla Servidores Archivados (lista, detalle, acciones stub) | [`specs/archived-servers-screen`](specs/archived-servers-screen/spec.md) | `2026-04-28` |
+| `ch-03` | Sistema de temas (paletas JSON en `src/themes/`, selector con preview) | [`specs/theme-core`](specs/theme-core/spec.md), [`specs/theme-loader`](specs/theme-loader/spec.md), [`specs/theme-selector-preview`](specs/theme-selector-preview/spec.md) | `2026-04-29` |
 
 ---
 
@@ -33,13 +35,13 @@
 
 | ID del Cambio | Nombre de la Tarea | Estado | Dependencias | Spec | Referencia al PRD |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `ch-03` | Sistema de temas (paletas JSON en `src/themes/`, selector con preview) | 🚧 In Progress | `ch-01` | ❌ Pendiente | §2.2.4 "Theme / Tema" |
+| `ch-03` | Sistema de temas (paletas JSON en `src/themes/`, selector con preview) | ✅ Archived | `ch-01` | ✅ [`theme-core`](specs/theme-core/spec.md), [`theme-loader`](specs/theme-loader/spec.md), [`theme-selector-preview`](specs/theme-selector-preview/spec.md) | §2.2.4 "Theme / Tema" |
 | `ch-04` | Internacionalización completa (extracción de todos los strings hardcodeados a `locales/`) | 🚧 In Progress | `ch-01` | ❌ Pendiente | §3.3 "i18n" y toda la UI |
 
 **Notas técnicas Fase 1:**
 - `ch-01`: ✅ Completado. Screen `src/screens/global-settings/` implementada con LanguageSelector, ThemeSelector, BackupPathInput.
 - `ch-02`: ✅ Completado. Screen `src/screens/archived-servers/` implementada con lista, detalle y empty state.
-- `ch-03**: Store tiene `theme: 'dark' \| 'light'`, pero **no hay** `src/themes/*.json` ni selector dinámico.
+- `ch-03`: ✅ Archivado 2026-04-29. `src/themes/` tiene `default-dark.json`, `ocean.json`, `forest.json`. Selector dinámico con preview inmediato y carga externa en runtime.
 - `ch-04`: `src/locales/en.json` y `es.json` existen, pero **no hay uso de `react-i18next`** en componentes principales.
 
 ---
@@ -180,7 +182,9 @@ Sin ch-05, todas estas features usan dashboardMockAdapter (stubs).
 | [`global-settings-screen`](specs/global-settings-screen/spec.md) | ch-01 | ✅ Escrito |
 | [`i18n-core`](specs/i18n-core/spec.md) | ch-01, ch-04 | ✅ Escrito |
 | [`theme-core`](specs/theme-core/spec.md) | ch-01, ch-03 | ✅ Escrito |
-| ch-03, ch-04, ch-05, ch-07, ch-08, ch-09, ch-10, ch-11, ch-12, ch-13, ch-17, ch-18, ch-19, ch-20, ch-22, ch-23 | — | ❌ Pendientes |
+| [`theme-loader`](specs/theme-loader/spec.md) | ch-03 | ✅ Escrito |
+| [`theme-selector-preview`](specs/theme-selector-preview/spec.md) | ch-03 | ✅ Escrito |
+| ch-04, ch-05, ch-07, ch-08, ch-09, ch-10, ch-11, ch-12, ch-13, ch-17, ch-18, ch-19, ch-20, ch-22, ch-23 | — | ❌ Pendientes |
 
 ---
 
@@ -191,8 +195,8 @@ Sin ch-05, todas estas features usan dashboardMockAdapter (stubs).
   **Archivado:** 2026-04-28. Screen en `src/screens/global-settings/`.
 - [x] `ch-02`: **DADO** servidores con `status='archived'` en SQLite, **CUANDO** se abre Servidores Archivados, **ENTONCES** aparecen en lista con metadatos correctos (nombre, fecha, tamaño).  
   **Archivado:** 2026-04-28
-- [ ] `ch-03`: **DADO** archivos en `src/themes/*.json`, **CUANDO** se abre selector de tema, **ENTONCES** lista dinámicamente todas las paletas y aplica preview inmediato.  
-  **Nota:** Store tiene `theme`; falta `src/themes/` y selector.
+- [x] `ch-03`: **DADO** archivos en `src/themes/*.json`, **CUANDO** se abre selector de tema, **ENTONCES** lista dinámicamente todas las paletas y aplica preview inmediato.  
+  **Archivado:** 2026-04-29. `src/themes/` con 3 paletas (default-dark, ocean, forest), selector dinámico, preview inmediato, carga externa en runtime, background color en LayoutShell, theme colors propagados a todos los screens.
 - [ ] `ch-04`: `bun test` pasa con 100% de strings extraídos; `grep -r "hardcode" src/screens/ src/components/` retorna 0 resultados.  
   **Nota:** Locales existen pero no se usan en componentes. Requiere integrar `react-i18next`.
 
@@ -252,6 +256,5 @@ Sin ch-05, todas estas features usan dashboardMockAdapter (stubs).
 | 2 | **Health checker es Noop** | Deploy puede marcar `running` sin servidor funcional | ch-16 |
 | 3 | **Zod no instalado** | Validaciones frágiles, manuales | ch-19 |
 | 4 | **i18n no integrada** | Strings hardcodeados mezclados ES/EN | ch-04 |
-| 5 | **Temas sin archivos JSON** | Falta `src/themes/*.json` y selector dinámico | ch-03 |
-| 6 | **Specs faltantes** | 16 de 24 changes no tienen spec escrito | — |
+| 5 | **Specs faltantes** | 15 de 24 changes no tienen spec escrito | — |
 
