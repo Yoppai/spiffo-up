@@ -1,0 +1,15 @@
+{
+  "name": "Ocean",
+  "colors": {
+    "primary": "blue",
+    "secondary": "cyan",
+    "background": "black",
+    "success": "green",
+    "warning": "yellow",
+    "error": "red",
+    "focus": "white",
+    "text": "white",
+    "accent": "blue",
+    "border": "blue"
+  }
+}

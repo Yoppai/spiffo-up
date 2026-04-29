@@ -1,0 +1,15 @@
+{
+  "name": "Default Dark",
+  "colors": {
+    "primary": "cyan",
+    "secondary": "magenta",
+    "background": "black",
+    "success": "green",
+    "warning": "yellow",
+    "error": "red",
+    "focus": "blue",
+    "text": "white",
+    "accent": "green",
+    "border": "cyan"
+  }
+}
