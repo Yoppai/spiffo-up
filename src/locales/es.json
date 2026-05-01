@@ -77,5 +77,320 @@
       "cancel": "Cancelar",
       "confirm": "Eliminar"
     }
+  },
+  "layout": {
+    "terminalTooSmall": "Terminal demasiado pequeña.",
+    "terminalResize": "Agrandá la ventana para usar el dashboard de SPIFFO-UP."
+  },
+  "serverList": {
+    "columns": {
+      "name": "NOMBRE",
+      "instanceType": "TIPO INSTANCIA",
+      "status": "ESTADO",
+      "players": "JUGADORES",
+      "actions": "ACCIONES"
+    },
+    "headerDivider": "──────────┼────────────────┼──────────────┼─────────┼────────"
+  },
+  "serverDashboard": {
+    "noServerSelected": "No hay servidor seleccionado.",
+    "serverManagement": {
+      "title": "Administración del Servidor",
+      "status": "Estado:",
+      "ip": "IP:",
+      "ports": "Puertos:",
+      "gamePort": "juego",
+      "queryPort": "query",
+      "rconPort": "rcon",
+      "rcon": "RCON:",
+      "pulumi": "Pulumi:",
+      "branch": "Rama:",
+      "players": "Jugadores:",
+      "applyAllChanges": "Aplicar Todos los Cambios",
+      "gcpLifecycle": "Límite de ciclo de vida GCP",
+      "mockAdapterReady": "Adaptador mock listo",
+      "actions": {
+        "deploy": "Desplegar",
+        "stop": "Detener",
+        "start": "Iniciar",
+        "update": "Actualizar",
+        "archive": "Archivar"
+      },
+      "confirmDeploy": "¿Confirmar Despliegue? Presiona Enter para crear recursos GCP facturables.",
+      "confirmInstallPulumi": "CLI de Pulumi faltante. Presiona Enter para instalar.",
+      "confirmArchive": "¿Confirmar Archivar? Presiona Enter nuevamente (Stub, sin efectos remotos)."
+    },
+    "providerRegion": {
+      "title": "Proveedor y Región",
+      "provider": "Proveedor:",
+      "gcpMvp": "GCP MVP",
+      "awsComingSoon": "AWS Próximamente",
+      "azureComingSoon": "Azure Próximamente",
+      "region": "Región:",
+      "instance": "Instancia:",
+      "estimatedCost": "Costo estimado:",
+      "localEstimate": "estimación local",
+      "recommendation": "Recomendación:",
+      "chooseRegion": "←→ elegir, Enter cola",
+      "chooseInstance": "←→ elegir, Enter cola",
+      "measuring": "midiendo...",
+      "vcpu": "vCPU",
+      "ramGb": "GB"
+    },
+    "build": {
+      "title": "Build",
+      "currentBranch": "Rama actual:",
+      "selectedBranch": "Rama seleccionada:",
+      "imageTag": "Image tag:",
+      "pressEnterQueue": "Presiona Enter para Encolar Cambios",
+      "branchHint": "←→ stable/unstable/outdatedunstable"
+    },
+    "players": {
+      "title": "Jugadores",
+      "connected": "Jugadores conectados",
+      "mock": "Mock",
+      "actions": {
+        "message": "Mensaje",
+        "kick": "Expulsar",
+        "ban": "Banear"
+      },
+      "confirmAction": "Confirmar"
+    },
+    "stats": {
+      "title": "Estadísticas",
+      "containerMetrics": "Métricas del contenedor",
+      "mock": "Mock",
+      "cpu": "CPU:",
+      "memory": "Memoria:",
+      "network": "Red:",
+      "diskIo": "E/S Disco:",
+      "logsSnapshot": "Snapshot de logs:",
+      "actions": {
+        "refreshStats": "Actualizar Estadísticas",
+        "logsView": "Ver Logs"
+      },
+      "logsSubview": "Stub de sub-vista de logs: snapshot mock estático nomás."
+    },
+    "basicSettings": {
+      "title": "Configuración Básica",
+      "queueChanges": "Encolar Cambios",
+      "draftsHint": "Borradores locales hasta Encolar Cambios",
+      "serverName": "serverName",
+      "publicName": "publicName",
+      "description": "description",
+      "serverPassword": "serverPassword",
+      "publicListing": "publicListing",
+      "requiredError": "Nombre del Servidor y Nombre Público son requeridos."
+    },
+    "advancedSettings": {
+      "title": "Avanzado",
+      "configFiles": "Archivos de configuración",
+      "mockSftp": "Frontera SFTP mock",
+      "actions": {
+        "edit": "Editar",
+        "replace": "Reemplazar",
+        "download": "Descargar"
+      },
+      "mockEdit": "Preview de edición mock para",
+      "queueFileChange": "Stub: Encolar Cambio de Archivo"
+    },
+    "admins": {
+      "title": "Administradores",
+      "adminUsername": "adminUsername",
+      "adminPassword": "adminPassword",
+      "requiredError": "Nombre de usuario admin y contraseña de 4+ caracteres requeridos."
+    },
+    "scheduler": {
+      "title": "Programador",
+      "scheduledTasks": "Tareas programadas",
+      "mock": "Stub local mock",
+      "actions": {
+        "create": "Crear",
+        "edit": "Editar",
+        "toggle": "Alternar",
+        "delete": "Eliminar"
+      },
+      "enabled": "habilitado",
+      "disabled": "deshabilitado",
+      "editCron": "Editar cron:",
+      "editHint": "tipo, Enter guardar stub",
+      "confirmDelete": "¿Confirmar Eliminar tarea programada? Presiona Enter nuevamente."
+    },
+    "backups": {
+      "title": "Backups",
+      "history": "Historial de backups",
+      "mockPath": "Path local mock",
+      "actions": {
+        "createBackup": "Crear Backup",
+        "restore": "Restaurar",
+        "delete": "Eliminar"
+      },
+      "confirmAction": "Confirmar"
+    },
+    "backToServers": "Presiona Enter para volver a Servidores Activos."
+  },
+  "wizard": {
+    "setupWizard": "Asistente de Configuración",
+    "steps": {
+      "provider": "Proveedor",
+      "authProject": "Auth/Proyecto",
+      "serverName": "Nombre del Servidor",
+      "region": "Región",
+      "instance": "Instancia",
+      "review": "Revisión"
+    },
+    "hints": {
+      "escBack": "ESC retrocede; TAB cambia paneles.",
+      "authEdit": "Editar id de proyecto (opcional). Se validará durante el despliegue futuro.",
+      "serverNameHint": "Usa letras, números, espacios, puntos, guiones bajos o guiones.",
+      "projectIdOptional": "opcional",
+      "projectIdPlaceholder": "<opcional>",
+      "serverNamePlaceholder": "<requerido>",
+      "noProjectDetected": "Sin proyecto detectado",
+      "projectIdDetected": "Placeholder de detección local:",
+      "gcpZonesHint": "Zonas GCP por continente · latencia medida/fallback",
+      "instanceCatalog": "Catálogo avanzado:",
+      "reviewProjectIdNote": "El id de proyecto es un placeholder local y no se persiste hasta que llegue el soporte de deploy.",
+      "reviewCreatesLocal": "Crea borrador local nomás; no correrá Pulumi, SSH, SFTP ni RCON.",
+      "reviewSpanish": "Se creará el servidor en tu inventario local. Podrás desplegarlo desde su dashboard cuando el deploy esté disponible.",
+      "recommended": "· Recomendado"
+    },
+    "selectProvider": "Selecciona el proveedor cloud para el MVP:",
+    "projectId": "Id del proyecto:",
+    "name": "Nombre:",
+    "zone": "Zona:",
+    "instanceCost": "Niveles curados para Project Zomboid · precio estimado local",
+    "playerGuidance": "jugadores",
+    "review": {
+      "title": "Revisar borrador de servidor local",
+      "provider": "Proveedor:",
+      "project": "Proyecto:",
+      "serverName": "Nombre del servidor:",
+      "regionZone": "Región/zona:",
+      "instance": "Instancia:",
+      "gcp": "GCP"
+    },
+    "status": {
+      "comingSoon": "está Próximamente.",
+      "inventoryUnavailable": "Servicio de inventario no disponible. No se puede crear borrador local.",
+      "couldNotCreate": "No se pudo crear el borrador local."
+    },
+    "actions": {
+      "cancelWizard": "Cancelar Asistente",
+      "next": "Siguiente",
+      "back": "Atrás",
+      "createServer": "Crear Servidor"
+    },
+    "providers": {
+      "gcp": "GCP",
+      "aws": "AWS",
+      "azure": "Azure"
+    },
+    "errors": {
+      "serverNameRequired": "El nombre del servidor debe incluir letras o números."
+    }
+  },
+  "pendingChanges": {
+    "title": "Aplicar Cambios Pendientes",
+    "actions": {
+      "apply": "Aplicar Todos",
+      "discard": "Descartar Todos",
+      "back": "Volver a Editar"
+    },
+    "passphrase": {
+      "required": "Los cambios sensibles requieren frase de paso de sesión.",
+      "input": "Frase de paso:"
+    },
+    "impact": {
+      "label": "Impacto:",
+      "vmRecreate": "· recreate VM",
+      "restart": "· reinicio",
+      "none": "ninguno"
+    },
+    "result": {
+      "applied": "Cambios pendientes aplicados localmente."
+    },
+    "hints": {
+      "navigate": "←/→ Seleccionar · ENTER Confirmar · ESC Volver a Editar"
+    },
+    "banner": {
+      "pendingChanges": "{{count}} cambios pendientes · Presiona Ctrl+A para aplicar"
+    },
+    "errors": {
+      "invalidPassphrase": "Frase de paso inválida. Volver a editar o descartar buffer.",
+      "couldNotApply": "No se pudieron aplicar los cambios pendientes.",
+      "inventoryUnavailable": "Servicio de inventario no disponible."
+    }
+  },
+  "formatters": {
+    "status": {
+      "running": "RUNNING",
+      "provisioning": "INICIANDO",
+      "stopped": "DETENIDO",
+      "error": "ERROR",
+      "archived": "ARCHIVADO",
+      "draft": "DRAFT"
+    },
+    "rcon": {
+      "disabled": "disabled",
+      "exposedUnsafe": "exposed: unsafe",
+      "exposedRestricted": "exposed: restricted"
+    },
+    "action": {
+      "start": "start",
+      "stop": "stop"
+    }
+  },
+  "catalog": {
+    "providers": {
+      "gcp": "GCP",
+      "aws": "AWS",
+      "azure": "Azure"
+    },
+    "statusLabels": {
+      "mvpEnabled": "MVP habilitado",
+      "comingSoon": "Próximamente"
+    }
+  },
+  "status": {
+    "queuedChange": "Cola de cambio de infraestructura {{field}} ({{value}}).",
+    "queuedBuildBranch": "Cola de rama de build {{branch}}.",
+    "queuedBasicSettings": "Cola de {{count}} cambios de ajustes básicos.",
+    "queuedAdminCredentials": "Cola de cambios de credenciales admin.",
+    "deployStarted": "Deploy iniciado. Recursos GCP pueden generar costos.",
+    "deployComplete": "Deploy completo: {{ip}}",
+    "deployFailed": "Deploy fallido: {{error}}",
+    "installingPulumi": "Instalando Pulumi...",
+    "pulumiInstalled": "Pulumi instalado. Presiona Enter para Deploy.",
+    "installFailed": "Instalación fallida: {{error}}",
+    "pulumiNotReady": "Pulumi no está listo ({{status}}).",
+    "inventoryUnavailable": "Servicio de inventario no disponible.",
+    "mockStatsRefreshed": "Mock stats actualizados localmente.",
+    "logsViewToggled": "Stub de Logs View alternado.",
+    "stubAction": "Stub: {{action}} archivo solicitado; sin SFTP.",
+    "schedulerCronSaved": "Stub: cron del scheduler guardado ({{cron}}).",
+    "schedulerActionCompleted": "Stub: {{action}} del scheduler completado localmente.",
+    "cancelWizardFocused": "Cancelar Asistente enfocado. Presiona Enter para cancelar.",
+    "requiredFieldsMissing": "Nombre de Servidor y Nombre Público son requeridos.",
+    "isComingSoon": "{{provider}} está Próximamente.",
+    "installPulumiPrompt": "Pulumi CLI faltante. Presiona Enter para instalar.",
+    "schedulerEditOpened": "Stub de edición de Scheduler abierto.",
+    "adminRequired": "Nombre de usuario admin y contraseña de 4+ caracteres requeridos.",
+    "region": "Región",
+    "instanceType": "Tipo de Instancia",
+    "buildBranch": "Rama de Build",
+    "serverName": "Nombre del Servidor",
+    "publicName": "Nombre Público",
+    "description": "Descripción",
+    "serverPassword": "Contraseña del Servidor",
+    "publicListing": "Listado Público",
+    "adminUsername": "Usuario Admin",
+    "adminPassword": "Contraseña Admin",
+    "cronFieldsError": "Cron debe tener 5 campos.",
+    "cronCharsError": "Cron contiene caracteres no soportados."
+  },
+  "errors": {
+    "required": "Requerido",
+    "invalidPassphrase": "Frase de paso inválida"
   }
 }
