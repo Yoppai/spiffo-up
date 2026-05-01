@@ -1,5 +1,6 @@
 import type { PendingChange, PendingChangeCategory, ServerRecord } from '../types/index.js';
 import { encryptPendingSecret } from './pending-change-crypto.js';
+import i18next from '../i18n/config.js';
 
 export type DashboardActionResult = { label: string; message: string };
 
@@ -108,8 +109,8 @@ export function buildConfigFilenames(serverName: string): string[] {
 
 export function validateSimpleCron(cron: string): string | null {
   const parts = cron.trim().split(/\s+/);
-  if (parts.length !== 5) return 'Cron must have 5 fields.';
-  return parts.every((part) => /^[\d*/,-]+$/.test(part)) ? null : 'Cron contains unsupported characters.';
+  if (parts.length !== 5) return i18next.t('status.cronFieldsError');
+  return parts.every((part) => /^[\d*/,-]+$/.test(part)) ? null : i18next.t('status.cronCharsError');
 }
 
 export function createPendingChange(input: {
