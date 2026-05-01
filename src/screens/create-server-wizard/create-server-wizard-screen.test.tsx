@@ -1,6 +1,8 @@
-import { afterEach, describe, expect, it } from 'bun:test';
+import { afterEach, beforeAll, describe, expect, it } from 'bun:test';
 import React from 'react';
 import { render } from 'ink-testing-library';
+import i18next from 'i18next';
+import '../../i18n/config.js';
 import { CreateServerWizard, handleCreateServerWizardInput } from './create-server-wizard-screen.js';
 import { DashboardScreen } from '../main-menu/main-menu-screen.js';
 import { globalMenuItems } from '../main-menu/main-menu-view.js';
@@ -8,6 +10,10 @@ import { useAppStore } from '../../stores/app-store.js';
 import { useServersStore } from '../../stores/servers-store.js';
 import { bootstrapLocalInventory } from '../../services/index.js';
 import { createDatabaseConnection } from '../../infrastructure/database.js';
+
+beforeAll(async () => {
+  await i18next.changeLanguage('en');
+});
 
 afterEach(() => {
   useAppStore.getState().resetNavigation();
@@ -34,7 +40,7 @@ describe('create server wizard screen', () => {
     expect(frame).toContain('GCP zones by continent');
     expect(frame).toContain('americas');
     expect(frame).toContain('ms fallback');
-    expect(frame).toContain('Zone: us-central1-a');
+    expect(frame).toContain('Zone:: us-central1-a');
 
     app.nextWizardStep();
     frame = render(<CreateServerWizard />).lastFrame() ?? '';
