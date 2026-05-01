@@ -1,16 +1,21 @@
 import type { ServerRecord } from '../types/index.js';
+import type { TFunction } from 'i18next';
 
 export function isActiveServer(server: ServerRecord): boolean {
   return server.status === 'running' || server.status === 'provisioning';
 }
 
-export function formatServerStatus(server: ServerRecord): string {
-  if (server.status === 'running') return '🟢 RUNNING';
-  if (server.status === 'provisioning') return '⚠️ INICIANDO';
-  if (server.status === 'stopped') return '❌ DETENIDO';
-  if (server.status === 'error') return '❌ ERROR';
-  if (server.status === 'archived') return '📦 ARCHIVADO';
-  return '📝 DRAFT';
+export function formatServerStatus(server: ServerRecord, t: TFunction): string {
+  const emoji: Record<string, string> = {
+    running: '🟢',
+    provisioning: '⚠️',
+    stopped: '❌',
+    error: '❌',
+    archived: '📦',
+    draft: '📝',
+  };
+  const key = `formatters.status.${server.status}`;
+  return `${emoji[server.status] ?? '📝'} ${t(key)}`;
 }
 
 export function formatServerPlayers(server: ServerRecord): string {
@@ -18,6 +23,11 @@ export function formatServerPlayers(server: ServerRecord): string {
   return `${server.playersOnline}/${server.playersMax}`;
 }
 
-export function formatServerAction(server: ServerRecord): string {
-  return isActiveServer(server) ? 'stop' : 'start';
+export function formatRconExposure(server: ServerRecord, t: TFunction): string {
+  if (!server.publicRconEnabled) return t('formatters.rcon.disabled');
+  return server.rconUnsafe ? t('formatters.rcon.exposedUnsafe') : t('formatters.rcon.exposedRestricted');
+}
+
+export function formatServerAction(server: ServerRecord, t: TFunction): string {
+  return isActiveServer(server) ? t('formatters.action.stop') : t('formatters.action.start');
 }

@@ -10,6 +10,7 @@
 
 | Versión | Fecha | Cambio |
 | :--- | :--- | :--- |
+| v0.6 | 2026-04-30 | ch-04 completado y archivado; spec i18n-core sincronizado como main spec (delta merge, naming corregido a `complete-internationalization`) |
 | v0.5 | 2026-04-29 | ch-03 completado y archivado; specs theme-core, theme-loader, theme-selector-preview sincronizados como main specs |
 | v0.4 | 2026-04-28 | ch-01 y ch-02 completados y archivados; specs global-settings-screen, i18n-core, theme-core sincronizados |
 | v0.3 | 2026-04-27 | Alineación con código real: columna Spec, estados corregidos (parcial/in progress), notas técnicas de mocks, dependencias de SSH como bloqueante, criterios ajustados |
@@ -36,13 +37,13 @@
 | ID del Cambio | Nombre de la Tarea | Estado | Dependencias | Spec | Referencia al PRD |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `ch-03` | Sistema de temas (paletas JSON en `src/themes/`, selector con preview) | ✅ Archived | `ch-01` | ✅ [`theme-core`](specs/theme-core/spec.md), [`theme-loader`](specs/theme-loader/spec.md), [`theme-selector-preview`](specs/theme-selector-preview/spec.md) | §2.2.4 "Theme / Tema" |
-| `ch-04` | Internacionalización completa (extracción de todos los strings hardcodeados a `locales/`) | 🚧 In Progress | `ch-01` | ❌ Pendiente | §3.3 "i18n" y toda la UI |
+| `ch-04` | Internacionalización completa (extracción de todos los strings hardcodeados a `locales/`) | ✅ Archived | `ch-01` | ✅ [`i18n-core`](specs/i18n-core/spec.md) | §3.3 "i18n" y toda la UI |
 
 **Notas técnicas Fase 1:**
 - `ch-01`: ✅ Completado. Screen `src/screens/global-settings/` implementada con LanguageSelector, ThemeSelector, BackupPathInput.
 - `ch-02`: ✅ Completado. Screen `src/screens/archived-servers/` implementada con lista, detalle y empty state.
 - `ch-03`: ✅ Archivado 2026-04-29. `src/themes/` tiene `default-dark.json`, `ocean.json`, `forest.json`. Selector dinámico con preview inmediato y carga externa en runtime.
-- `ch-04`: `src/locales/en.json` y `es.json` existen, pero **no hay uso de `react-i18next`** en componentes principales.
+- `ch-04`: ✅ Archivado 2026-04-30. Extracción completa de ~150 strings a `src/locales/`. 280 keys EN/ES con paridad. Todos los componentes principales usan `useTranslation()`. Runtime language switch verificado. 171/171 tests pass. Ver: `openspec/changes/archive/2026-04-30-complete-internationalization/`.
 
 ---
 
@@ -184,7 +185,7 @@ Sin ch-05, todas estas features usan dashboardMockAdapter (stubs).
 | [`theme-core`](specs/theme-core/spec.md) | ch-01, ch-03 | ✅ Escrito |
 | [`theme-loader`](specs/theme-loader/spec.md) | ch-03 | ✅ Escrito |
 | [`theme-selector-preview`](specs/theme-selector-preview/spec.md) | ch-03 | ✅ Escrito |
-| ch-04, ch-05, ch-07, ch-08, ch-09, ch-10, ch-11, ch-12, ch-13, ch-17, ch-18, ch-19, ch-20, ch-22, ch-23 | — | ❌ Pendientes |
+| ch-05, ch-07, ch-08, ch-09, ch-10, ch-11, ch-12, ch-13, ch-17, ch-18, ch-19, ch-20, ch-22, ch-23 | — | ❌ Pendientes |
 
 ---
 
@@ -197,8 +198,8 @@ Sin ch-05, todas estas features usan dashboardMockAdapter (stubs).
   **Archivado:** 2026-04-28
 - [x] `ch-03`: **DADO** archivos en `src/themes/*.json`, **CUANDO** se abre selector de tema, **ENTONCES** lista dinámicamente todas las paletas y aplica preview inmediato.  
   **Archivado:** 2026-04-29. `src/themes/` con 3 paletas (default-dark, ocean, forest), selector dinámico, preview inmediato, carga externa en runtime, background color en LayoutShell, theme colors propagados a todos los screens.
-- [ ] `ch-04`: `bun test` pasa con 100% de strings extraídos; `grep -r "hardcode" src/screens/ src/components/` retorna 0 resultados.  
-  **Nota:** Locales existen pero no se usan en componentes. Requiere integrar `react-i18next`.
+- [x] `ch-04`: `bun test` pasa (171/171); 280 keys EN/ES con paridad exacta; 0 hardcoded strings user-facing en componentes principales. Runtime language switch verificado (ES↔EN).  
+  **Archivado:** 2026-04-30. `src/locales/` con 280 keys cada locale. Todos los componentes (dashboard panels, wizard, pending changes modal, main menu, server list, layout shell, formatters, catalog, store) usan `t()` o `i18next.t()`.
 
 ### Fase 2
 - [ ] `ch-05`: Tabla `ssh_keys` existe en SQLite; deploy de servidor crea par Ed25519; `ssh -i <key> user@host` conecta sin password.  
@@ -255,6 +256,6 @@ Sin ch-05, todas estas features usan dashboardMockAdapter (stubs).
 | 1 | **SSH real no existe** | Todo Fase 2 es stub sin side effects remotos | ch-05 |
 | 2 | **Health checker es Noop** | Deploy puede marcar `running` sin servidor funcional | ch-16 |
 | 3 | **Zod no instalado** | Validaciones frágiles, manuales | ch-19 |
-| 4 | **i18n no integrada** | Strings hardcodeados mezclados ES/EN | ch-04 |
+| 4 | ~~**i18n no integrada**~~ | ✅ Resuelto en ch-04 — 280 keys EN/ES, todos los componentes principales traducidos | ~~ch-04~~ |
 | 5 | **Specs faltantes** | 15 de 24 changes no tienen spec escrito | — |
 

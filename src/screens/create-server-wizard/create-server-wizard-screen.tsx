@@ -1,5 +1,7 @@
 import React from 'react';
 import { Box, Text } from 'ink';
+import { useTranslation } from 'react-i18next';
+import i18next from '../../i18n/config.js';
 import { LayoutShell } from '../../components/index.js';
 import { useInkStore } from '../../hooks/use-ink-store.js';
 import { useTheme } from '../../hooks/use-theme.js';
@@ -11,11 +13,12 @@ import { createLocalDraftServer, getLocalInventoryService, hydrateStoresFromInve
 import type { CreateServerWizardState } from '../../types/index.js';
 import { gcpRegions, instanceTiers, providerOptions, wizardSteps } from './catalog.js';
 
-const PROVIDER_ACTIONS = ['Cancel Wizard', 'Next'] as const;
-const STEP_ACTIONS = ['Back', 'Next'] as const;
-const REVIEW_ACTIONS = ['Back', 'Create Server'] as const;
+const PROVIDER_ACTIONS = ['cancelWizard', 'next'] as const;
+const STEP_ACTIONS = ['back', 'next'] as const;
+const REVIEW_ACTIONS = ['back', 'createServer'] as const;
 
 export const CreateServerWizard: React.FC = () => {
+  const { t } = useTranslation();
   const navigation = useInkStore(useAppStore, (state) => state.navigation);
   const wizard = useInkStore(useAppStore, (state) => state.createServerWizard);
   const servers = useInkStore(useServersStore, (state) => state.servers);
@@ -26,8 +29,8 @@ export const CreateServerWizard: React.FC = () => {
 
   return (
     <LayoutShell
-      leftTitle="Setup Wizard"
-      rightTitle={currentStep.label}
+      leftTitle={t('wizard.setupWizard')}
+      rightTitle={t(currentStep.label)}
       focusedPanel={navigation.focusedPanel}
       activeServers={activeServers.length}
       totalServers={servers.length}
@@ -98,6 +101,7 @@ export function handleCreateServerWizardInput({
 }
 
 function WizardStepper({ wizard, colors }: { wizard: CreateServerWizardState; colors: ReturnType<typeof useTheme>['colors'] }) {
+  const { t } = useTranslation();
   return (
     <Box flexDirection="column">
       {wizardSteps.map((step, index) => {
@@ -105,16 +109,17 @@ function WizardStepper({ wizard, colors }: { wizard: CreateServerWizardState; co
         const done = wizard.stepIndex > index;
         return (
           <Text key={step.id} color={active ? colors.focus : done ? colors.success : colors.text} inverse={active}>
-            {active ? '>' : done ? '✓' : ' '} {index + 1}. {step.label}
+            {active ? '>' : done ? '✓' : ' '} {index + 1}. {t(step.label)}
           </Text>
         );
       })}
-      <Text dimColor>ESC backs up; TAB changes panels.</Text>
+      <Text dimColor>{t('wizard.hints.escBack')}</Text>
     </Box>
   );
 }
 
 function WizardStepContent({ wizard, colors }: { wizard: CreateServerWizardState; colors: ReturnType<typeof useTheme>['colors'] }) {
+  const { t } = useTranslation();
   const step = wizardSteps[wizard.stepIndex]?.id ?? 'provider';
 
   return (
@@ -131,94 +136,100 @@ function WizardStepContent({ wizard, colors }: { wizard: CreateServerWizardState
 }
 
 function ProviderStep({ wizard, colors }: { wizard: CreateServerWizardState; colors: ReturnType<typeof useTheme>['colors'] }) {
+  const { t } = useTranslation();
   return (
     <Box flexDirection="column">
-      <Text color={colors.text}>Select cloud provider for MVP:</Text>
+      <Text color={colors.text}>{t('wizard.selectProvider')}</Text>
       {providerOptions.map((provider, index) => (
         <Text key={provider.id} color={wizard.providerCursor === index ? colors.focus : provider.enabled ? colors.text : colors.text} dimColor={!provider.enabled} inverse={wizard.providerCursor === index}>
-          {wizard.providerCursor === index ? '>' : ' '} {provider.label} · {provider.statusLabel}
+          {wizard.providerCursor === index ? '>' : ' '} {t(provider.label)} · {t(provider.statusLabel)}
         </Text>
       ))}
-      <ActionRow actions={PROVIDER_ACTIONS} cursor={wizard.actionCursor} colors={colors} />
+      <ActionRow actions={[t(`wizard.actions.${PROVIDER_ACTIONS[0]}`), t(`wizard.actions.${PROVIDER_ACTIONS[1]}`)]} cursor={wizard.actionCursor} colors={colors} />
     </Box>
   );
 }
 
 function AuthProjectStep({ wizard, colors }: { wizard: CreateServerWizardState; colors: ReturnType<typeof useTheme>['colors'] }) {
+  const { t } = useTranslation();
   return (
     <Box flexDirection="column">
-      <Text color={colors.text}>Local detection placeholder: {wizard.draft.projectId || 'No project detected'}</Text>
-      <Text dimColor>Edit project id (optional). It will be validated during future deploy.</Text>
-      <Text color={colors.text}>Project id: {wizard.draft.projectId || '<optional>'}</Text>
-      <ActionRow actions={STEP_ACTIONS} cursor={wizard.actionCursor} colors={colors} />
+      <Text color={colors.text}>{t('wizard.hints.projectIdDetected')}: {wizard.draft.projectId || t('wizard.hints.noProjectDetected')}</Text>
+      <Text dimColor>{t('wizard.hints.authEdit')}</Text>
+      <Text color={colors.text}>{t('wizard.projectId')} {wizard.draft.projectId || t('wizard.hints.projectIdPlaceholder')}</Text>
+      <ActionRow actions={[t(`wizard.actions.${STEP_ACTIONS[0]}`), t(`wizard.actions.${STEP_ACTIONS[1]}`)]} cursor={wizard.actionCursor} colors={colors} />
     </Box>
   );
 }
 
 function ServerNameStep({ wizard, colors }: { wizard: CreateServerWizardState; colors: ReturnType<typeof useTheme>['colors'] }) {
+  const { t } = useTranslation();
   return (
     <Box flexDirection="column">
-      <Text color={colors.text}>Name: {wizard.draft.serverName || '<required>'}</Text>
+      <Text color={colors.text}>{t('wizard.name')} {wizard.draft.serverName || t('wizard.hints.serverNamePlaceholder')}</Text>
       {wizard.validationErrors.serverName ? <Text color={colors.error}>{wizard.validationErrors.serverName}</Text> : null}
-      <Text dimColor>Use letters, numbers, spaces, dots, underscores or dashes.</Text>
-      <ActionRow actions={STEP_ACTIONS} cursor={wizard.actionCursor} colors={colors} />
+      <Text dimColor>{t('wizard.hints.serverNameHint')}</Text>
+      <ActionRow actions={[t(`wizard.actions.${STEP_ACTIONS[0]}`), t(`wizard.actions.${STEP_ACTIONS[1]}`)]} cursor={wizard.actionCursor} colors={colors} />
     </Box>
   );
 }
 
 function RegionStep({ wizard, colors }: { wizard: CreateServerWizardState; colors: ReturnType<typeof useTheme>['colors'] }) {
+  const { t } = useTranslation();
   const selectedRegion = gcpRegions[wizard.regionCursor] ?? gcpRegions[0]!;
   const selectedZone = selectedRegion.zones[wizard.zoneCursor] ?? selectedRegion.zones[0];
   return (
     <Box flexDirection="column">
-      <Text color={colors.text}>GCP zones by continent · latency measured/fallback</Text>
+      <Text color={colors.text}>{t('wizard.hints.gcpZonesHint')}</Text>
       {gcpRegions.map((region, index) => (
         <Text key={region.id} color={wizard.regionCursor === index ? colors.focus : colors.text} inverse={wizard.regionCursor === index}>
           {wizard.regionCursor === index ? '>' : ' '} {region.continent ?? 'gcp'} · {region.label} · {region.location}
         </Text>
       ))}
-      <Text color={colors.text}>Zone: {selectedZone?.label ?? '-'} · {selectedZone?.latencyLabel ?? formatGcpLatency(undefined)}</Text>
-      <ActionRow actions={STEP_ACTIONS} cursor={wizard.actionCursor} colors={colors} />
+      <Text color={colors.text}>{t('wizard.zone')}: {selectedZone?.label ?? '-'} · {selectedZone?.latencyLabel ?? formatGcpLatency(undefined)}</Text>
+      <ActionRow actions={[t(`wizard.actions.${STEP_ACTIONS[0]}`), t(`wizard.actions.${STEP_ACTIONS[1]}`)]} cursor={wizard.actionCursor} colors={colors} />
     </Box>
   );
 }
 
 function InstanceStep({ wizard, colors }: { wizard: CreateServerWizardState; colors: ReturnType<typeof useTheme>['colors'] }) {
+  const { t } = useTranslation();
   const recommendation = recommendInstanceForMaxPlayers(null);
   return (
     <Box flexDirection="column">
-      <Text color={colors.text}>Curated Project Zomboid tiers · estimated local pricing</Text>
+      <Text color={colors.text}>{t('wizard.instanceCost')}</Text>
       {instanceTiers.map((tier, index) => (
         <Text key={tier.id} color={wizard.instanceCursor === index ? colors.focus : colors.text} inverse={wizard.instanceCursor === index}>
-          {wizard.instanceCursor === index ? '>' : ' '} {tier.label}: {tier.instanceType} · {tier.vcpu} vCPU · {tier.ramGb}GB RAM · JVM {tier.jvmMemory} · {tier.estimatedHourlyCost} · {tier.estimatedMonthlyCost}{tier.instanceType === recommendation.instanceType ? ' · Recommended' : ''}
+          {wizard.instanceCursor === index ? '>' : ' '} {t(tier.label)}: {tier.instanceType} · {tier.vcpu} vCPU · {tier.ramGb}GB RAM · JVM {tier.jvmMemory} · {tier.estimatedHourlyCost} · {tier.estimatedMonthlyCost}{tier.instanceType === recommendation.instanceType ? t('wizard.hints.recommended') : ''}
         </Text>
       ))}
       <Text dimColor>{instanceTiers[wizard.instanceCursor]?.playerGuidance}</Text>
-      <Text dimColor>Advanced catalog: {filteredInstanceCategories.map((category) => category.label).join(', ')}</Text>
-      <ActionRow actions={STEP_ACTIONS} cursor={wizard.actionCursor} colors={colors} />
+      <Text dimColor>{t('wizard.hints.instanceCatalog')}: {filteredInstanceCategories.map((category) => category.label).join(', ')}</Text>
+      <ActionRow actions={[t(`wizard.actions.${STEP_ACTIONS[0]}`), t(`wizard.actions.${STEP_ACTIONS[1]}`)]} cursor={wizard.actionCursor} colors={colors} />
     </Box>
   );
 }
 
 function ReviewStep({ wizard, colors }: { wizard: CreateServerWizardState; colors: ReturnType<typeof useTheme>['colors'] }) {
+  const { t } = useTranslation();
   const tier = instanceTiers.find((candidate) => candidate.instanceType === wizard.draft.instanceType);
   return (
     <Box flexDirection="column">
-      <Text color={colors.success}>Review local server draft</Text>
-      <Text color={colors.text}>Provider: GCP</Text>
-      <Text color={colors.text}>Project: {wizard.draft.projectId || 'No project detected / optional'}</Text>
-      <Text color={colors.text}>Server name: {wizard.draft.serverName}</Text>
-      <Text color={colors.text}>Region/zone: {wizard.draft.region} / {wizard.draft.zone}</Text>
-      <Text color={colors.text}>Instance: {tier?.label ?? 'Selected'} · {wizard.draft.instanceType}</Text>
-      {wizard.draft.projectId ? <Text dimColor>Project id is a local placeholder and is not persisted until deploy support lands.</Text> : null}
-      <Text color={colors.warning}>Creates local draft only; no Pulumi, SSH, SFTP or RCON will run.</Text>
-      <Text>Se creará el servidor en tu inventario local. Podrás desplegarlo desde su dashboard cuando el deploy esté disponible.</Text>
-      <ActionRow actions={REVIEW_ACTIONS} cursor={wizard.actionCursor} colors={colors} />
+      <Text color={colors.success}>{t('wizard.review.title')}</Text>
+      <Text color={colors.text}>{t('wizard.review.provider')}: {t('wizard.review.gcp')}</Text>
+      <Text color={colors.text}>{t('wizard.review.project')}: {wizard.draft.projectId || t('wizard.hints.noProjectDetected')}</Text>
+      <Text color={colors.text}>{t('wizard.review.serverName')}: {wizard.draft.serverName}</Text>
+      <Text color={colors.text}>{t('wizard.review.regionZone')}: {wizard.draft.region} / {wizard.draft.zone}</Text>
+      <Text color={colors.text}>{t('wizard.review.instance')}: {t(tier?.label ?? 'Instance')} · {wizard.draft.instanceType}</Text>
+      {wizard.draft.projectId ? <Text dimColor>{t('wizard.hints.reviewProjectIdNote')}</Text> : null}
+      <Text color={colors.warning}>{t('wizard.hints.reviewCreatesLocal')}</Text>
+      <Text>{t('wizard.hints.reviewSpanish')}</Text>
+      <ActionRow actions={[t(`wizard.actions.${REVIEW_ACTIONS[0]}`), t(`wizard.actions.${REVIEW_ACTIONS[1]}`)]} cursor={wizard.actionCursor} colors={colors} />
     </Box>
   );
 }
 
-function ActionRow({ actions, cursor, colors }: { actions: ReadonlyArray<string>; cursor: number; colors: ReturnType<typeof useTheme>['colors'] }) {
+function ActionRow({ actions, cursor, colors }: { actions: string[]; cursor: number; colors: ReturnType<typeof useTheme>['colors'] }) {
   return (
     <Box gap={2}>
       {actions.map((action, index) => (
@@ -240,6 +251,7 @@ function setTextDraft(app: ReturnType<typeof useAppStore.getState>, step: string
 function confirmWizardAction(app: ReturnType<typeof useAppStore.getState>): void {
   const wizard = useAppStore.getState().createServerWizard;
   const step = wizardSteps[wizard.stepIndex]?.id ?? 'provider';
+  const t = (key: string) => key; // Uses keys directly, translation happens in React renders
 
   if (wizard.actionCursor === 0) {
     if (step === 'provider') app.cancelCreateServerWizard();
@@ -248,7 +260,7 @@ function confirmWizardAction(app: ReturnType<typeof useAppStore.getState>): void
   }
 
   if (step === 'provider' && providerOptions[wizard.providerCursor]?.enabled === false) {
-    app.setWizardStatusMessage(`${providerOptions[wizard.providerCursor]?.label} is Coming Soon.`);
+    app.setWizardStatusMessage(i18next.t('wizard.status.isComingSoon', { provider: providerOptions[wizard.providerCursor]?.label }));
     return;
   }
 
@@ -259,7 +271,7 @@ function confirmWizardAction(app: ReturnType<typeof useAppStore.getState>): void
 
   const inventory = getLocalInventoryService();
   if (!inventory) {
-    app.setWizardStatusMessage('Inventory service unavailable. Cannot create local draft.');
+    app.setWizardStatusMessage(i18next.t('wizard.status.inventoryUnavailable'));
     return;
   }
 
@@ -270,6 +282,6 @@ function confirmWizardAction(app: ReturnType<typeof useAppStore.getState>): void
     app.resetCreateServerWizard();
     app.enterServerDashboard();
   } catch (error) {
-    app.setWizardStatusMessage(error instanceof Error ? error.message : 'Could not create local draft.');
+    app.setWizardStatusMessage(error instanceof Error ? error.message : i18next.t('wizard.status.couldNotCreate'));
   }
 }

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Text } from 'ink';
+import { useTranslation } from 'react-i18next';
 import { calculatePendingChangesImpact, groupPendingChangesByPanel } from '../lib/pending-changes.js';
 import { useInkStore } from '../hooks/use-ink-store.js';
 import { useAppStore } from '../stores/app-store.js';
@@ -7,13 +8,8 @@ import { usePendingChangesStore } from '../stores/pending-changes-store.js';
 import { useTheme } from '../hooks/use-theme.js';
 import type { PendingChangesModalAction } from '../types/index.js';
 
-const actionLabels: Record<PendingChangesModalAction, string> = {
-  apply: 'Apply All',
-  discard: 'Discard All',
-  back: 'Back to Edit',
-};
-
 export const ApplyPendingChangesModal: React.FC = () => {
+  const { t } = useTranslation();
   const changes = useInkStore(usePendingChangesStore, (state) => state.changes);
   const modal = useInkStore(useAppStore, (state) => state.pendingChangesModal);
   const { colors } = useTheme();
@@ -23,17 +19,17 @@ export const ApplyPendingChangesModal: React.FC = () => {
   return (
     <Box justifyContent="center" paddingX={2}>
       <Box borderStyle="double" borderColor={colors.focus} paddingX={1} flexDirection="column" width={76}>
-      <Text color={colors.focus}>Apply Pending Changes</Text>
-      {modal.mode === 'result' ? <Text color={colors.success}>{modal.resultMessage ?? 'Applied pending changes locally.'}</Text> : null}
+      <Text color={colors.focus}>{t('pendingChanges.title')}</Text>
+      {modal.mode === 'result' ? <Text color={colors.success}>{modal.resultMessage ?? t('pendingChanges.result.applied')}</Text> : null}
       {modal.mode === 'passphrase' ? (
         <>
-          <Text color={colors.warning}>Sensitive changes require session passphrase.</Text>
-          <Text color={colors.text}>Passphrase: {'*'.repeat(modal.passphraseInput.length)}</Text>
+          <Text color={colors.warning}>{t('pendingChanges.passphrase.required')}</Text>
+          <Text color={colors.text}>{t('pendingChanges.passphrase.input')} {'*'.repeat(modal.passphraseInput.length)}</Text>
         </>
       ) : null}
       {modal.mode === 'summary' ? (
         <>
-          <Text color={colors.text}>Impact: {impact.pipeline.join(' → ') || 'none'}{impact.requiresVmRecreate ? ' · VM recreate' : ''}{impact.requiresRestart ? ' · restart' : ''}</Text>
+          <Text color={colors.text}>{t('pendingChanges.impact.label')} {impact.pipeline.join(' → ') || t('pendingChanges.impact.none')}{impact.requiresVmRecreate ? t('pendingChanges.impact.vmRecreate') : ''}{impact.requiresRestart ? t('pendingChanges.impact.restart') : ''}</Text>
           {groups.map((group) => (
             <Box key={group.panel} flexDirection="column" marginTop={1}>
               <Text color={colors.warning}>{group.panel}</Text>
@@ -48,11 +44,11 @@ export const ApplyPendingChangesModal: React.FC = () => {
       <Box marginTop={1}>
         {(['apply', 'discard', 'back'] as PendingChangesModalAction[]).map((action) => (
           <Text key={action} inverse={modal.selectedAction === action} color={modal.selectedAction === action ? colors.focus : colors.text}>
-            {' '}{actionLabels[action]}{' '}
+            {' '}{t(`pendingChanges.actions.${action}`)}{' '}
           </Text>
         ))}
       </Box>
-      <Text dimColor>←/→ Select · ENTER Confirm · ESC Back to Edit</Text>
+      <Text dimColor>{t('pendingChanges.hints.navigate')}</Text>
       </Box>
     </Box>
   );

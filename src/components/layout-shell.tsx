@@ -1,6 +1,7 @@
 import React from 'react';
 import type { ReactNode } from 'react';
 import { Box, Text } from 'ink';
+import { useTranslation } from 'react-i18next';
 import { calculateLayoutDimensions } from './layout-utils.js';
 import { TuiFooter } from './footer.js';
 import { TuiHeader } from './header.js';
@@ -33,14 +34,15 @@ export const LayoutShell: React.FC<LayoutShellProps> = ({
   width = process.stdout.columns,
   height = process.stdout.rows,
 }) => {
+  const { t } = useTranslation();
   const dimensions = calculateLayoutDimensions(width, height);
   const { colors } = useTheme();
 
   if (dimensions.isTooSmall) {
     return (
       <Box flexDirection="column" borderStyle="round" paddingX={1}>
-        <Text color="yellow">Terminal demasiado pequeña.</Text>
-        <Text>Agrandá la ventana para usar el dashboard de SPIFFO-UP.</Text>
+        <Text color="yellow">{t('layout.terminalTooSmall')}</Text>
+        <Text>{t('layout.terminalResize')}</Text>
       </Box>
     );
   }

@@ -14,21 +14,29 @@ import { GlobalSettingsPanel } from '../global-settings/global-settings-panel.js
 import { ArchivedServersPanel } from '../archived-servers/archived-servers-panel.js';
 import { isActiveServer } from '../../lib/index.js';
 
+export const GLOBAL_MENU_ITEM_IDS: GlobalMenuItem['id'][] = [
+  'create-server',
+  'active-servers',
+  'archived-servers',
+  'global-settings',
+];
+
 export function useGlobalMenuItems(): GlobalMenuItem[] {
   const { t } = useTranslation();
   return [
-    { id: 'create-server', icon: '+', label: t('menu.createServer'), rightPanelTitle: 'Create Server Wizard' },
+    { id: 'create-server', icon: '+', label: t('menu.createServer'), rightPanelTitle: t('wizard.setupWizard') },
     { id: 'active-servers', icon: '▶', label: t('menu.activeServers'), rightPanelTitle: 'Active Servers Preview' },
     { id: 'archived-servers', icon: '📦', label: t('menu.archivedServers'), rightPanelTitle: 'Archived Servers' },
     { id: 'global-settings', icon: '⚙', label: t('menu.globalSettings'), rightPanelTitle: 'Global Settings' },
   ];
 }
 
+// Backward-compatible static items for consumers that need synchronous access
 export const globalMenuItems: GlobalMenuItem[] = [
-  { id: 'create-server', icon: '+', label: '1. Crear Nuevo Servidor', rightPanelTitle: 'Create Server Wizard' },
-  { id: 'active-servers', icon: '▶', label: '2. Servidores Activos', rightPanelTitle: 'Active Servers Preview' },
-  { id: 'archived-servers', icon: '📦', label: '3. Servidores Archivados', rightPanelTitle: 'Archived Servers' },
-  { id: 'global-settings', icon: '⚙', label: '4. Configuración Global', rightPanelTitle: 'Global Settings' },
+  { id: 'create-server', icon: '+', label: '1. Create New Server', rightPanelTitle: 'Create Server Wizard' },
+  { id: 'active-servers', icon: '▶', label: '2. Active Servers', rightPanelTitle: 'Active Servers Preview' },
+  { id: 'archived-servers', icon: '📦', label: '3. Archived Servers', rightPanelTitle: 'Archived Servers' },
+  { id: 'global-settings', icon: '⚙', label: '4. Global Settings', rightPanelTitle: 'Global Settings' },
 ];
 
 export const MainMenuView: React.FC = () => {
@@ -42,7 +50,7 @@ export const MainMenuView: React.FC = () => {
 
   return (
     <LayoutShell
-      leftTitle="Menu"
+      leftTitle={t('menu.archivedServers')}
       rightTitle={selectedMenu.rightPanelTitle}
       focusedPanel={navigation.focusedPanel}
       activeServers={activeServers.length}
