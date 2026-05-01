@@ -2,18 +2,18 @@ import type { GcpRegionOption, InstanceTierOption, ProviderOption, WizardStep } 
 import { curatedInstanceTiers, formatGcpLatency, gcpRegionsCatalog } from '../../lib/gcp-catalog.js';
 
 export const wizardSteps: WizardStep[] = [
-  { id: 'provider', label: 'Provider' },
-  { id: 'auth-project', label: 'Auth/Project' },
-  { id: 'server-name', label: 'Server Name' },
-  { id: 'region', label: 'Region' },
-  { id: 'instance', label: 'Instance' },
-  { id: 'review', label: 'Review' },
+  { id: 'provider', label: 'wizard.steps.provider' },
+  { id: 'auth-project', label: 'wizard.steps.authProject' },
+  { id: 'server-name', label: 'wizard.steps.serverName' },
+  { id: 'region', label: 'wizard.steps.region' },
+  { id: 'instance', label: 'wizard.steps.instance' },
+  { id: 'review', label: 'wizard.steps.review' },
 ];
 
 export const providerOptions: ProviderOption[] = [
-  { id: 'gcp', label: 'GCP', enabled: true, statusLabel: 'MVP enabled' },
-  { id: 'aws', label: 'AWS', enabled: false, statusLabel: 'Coming Soon' },
-  { id: 'azure', label: 'Azure', enabled: false, statusLabel: 'Coming Soon' },
+  { id: 'gcp', label: 'wizard.providers.gcp', enabled: true, statusLabel: 'catalog.statusLabels.mvpEnabled' },
+  { id: 'aws', label: 'wizard.providers.aws', enabled: false, statusLabel: 'catalog.statusLabels.comingSoon' },
+  { id: 'azure', label: 'wizard.providers.azure', enabled: false, statusLabel: 'catalog.statusLabels.comingSoon' },
 ];
 
 export const gcpRegions: GcpRegionOption[] = gcpRegionsCatalog.map((region) => ({
