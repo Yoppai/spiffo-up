@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import i18next from '../i18n/config.js';
 import { gcpRegions, instanceTiers, providerOptions, wizardSteps } from '../screens/create-server-wizard/catalog.js';
 import { validateWizardServerName } from '../services/create-server-wizard-service.js';
 import type { CreateServerWizardState, DashboardPanelUiState, GlobalRightMode, NavigationState, NavigationTarget, PanelFocus, PendingChangesModalAction, PendingChangesModalMode, PendingChangesModalState, ServerMenuId } from '../types/index.js';
@@ -304,7 +305,7 @@ export const useAppStore = create<AppState>((set) => ({
   previousWizardStep: () =>
     set((state) => {
       if (state.createServerWizard.stepIndex <= 0) {
-        return { createServerWizard: { ...state.createServerWizard, actionCursor: 0, statusMessage: 'Cancel Wizard focused. Press Enter to cancel.' } };
+        return { createServerWizard: { ...state.createServerWizard, actionCursor: 0, statusMessage: i18next.t('status.cancelWizardFocused') } };
       }
 
       return { createServerWizard: { ...state.createServerWizard, stepIndex: state.createServerWizard.stepIndex - 1, actionCursor: 1, validationErrors: {}, statusMessage: null } };
