@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Text } from 'ink';
+import { useTranslation } from 'react-i18next';
 import { truncateText } from '../../components/index.js';
 import { formatServerAction, formatServerPlayers, formatServerStatus } from '../../lib/index.js';
 import { useTheme } from '../../hooks/use-theme.js';
@@ -11,17 +12,18 @@ interface ServerListProps {
 }
 
 export const ServerList: React.FC<ServerListProps> = ({ servers, cursor }) => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   return (
     <Box flexDirection="column">
-      <Text color={colors.text} bold>NAME      │ INSTANCE TYPE  │ STATUS       │ PLAYERS │ ACCIONES</Text>
-      <Text color={colors.text} dimColor>──────────┼────────────────┼──────────────┼─────────┼────────</Text>
+      <Text color={colors.text} bold>{t('serverList.columns.name')}      │ {t('serverList.columns.instanceType')}  │ {t('serverList.columns.status')}       │ {t('serverList.columns.players')} │ {t('serverList.columns.actions')}</Text>
+      <Text color={colors.text} dimColor>{t('serverList.headerDivider')}</Text>
       {servers.map((server, index) => {
         const selected = cursor === index;
         return (
           <Text key={server.id} color={selected ? colors.focus : colors.text} inverse={selected}>
             {selected ? '>' : ' '} {truncateText(server.name.padEnd(8), 8)} │ {truncateText(server.instanceType.padEnd(14), 14)} │{' '}
-            {formatServerStatus(server).padEnd(12)} │ {formatServerPlayers(server).padEnd(7)} │ {formatServerAction(server)}
+            {formatServerStatus(server, t).padEnd(12)} │ {formatServerPlayers(server).padEnd(7)} │ {formatServerAction(server, t)}
           </Text>
         );
       })}

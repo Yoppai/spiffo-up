@@ -3,8 +3,9 @@ import { useApp, useInput } from 'ink';
 import { useInkStore } from '../../hooks/use-ink-store.js';
 import { useAppStore } from '../../stores/app-store.js';
 import { useServersStore } from '../../stores/servers-store.js';
-import { MainMenuView, globalMenuItems } from './main-menu-view.js';
-import { ServerDashboard, serverMenuItems } from '../server-dashboard/server-dashboard-screen.js';
+import i18next from '../../i18n/config.js';
+import { MainMenuView, GLOBAL_MENU_ITEM_IDS } from './main-menu-view.js';
+import { ServerDashboard, SERVER_MENU_IDS } from '../server-dashboard/server-dashboard-screen.js';
 import { handleDashboardPanelInput } from '../server-dashboard/dashboard-panels.js';
 import { handleGlobalSettingsInput } from './global-settings-input.js';
 import { handleArchivedServersInput } from '../archived-servers/archived-servers-input.js';
@@ -19,7 +20,7 @@ const GLOBAL_MENU_ACTIVE_SERVERS_INDEX = 1;
 const GLOBAL_MENU_CREATE_SERVER_INDEX = 0;
 const GLOBAL_MENU_ARCHIVED_SERVERS_INDEX = 2;
 const GLOBAL_MENU_GLOBAL_SETTINGS_INDEX = 3;
-const BACK_TO_SERVERS_INDEX = serverMenuItems.length - 1;
+const BACK_TO_SERVERS_INDEX = SERVER_MENU_IDS.length - 1;
 
 export const DashboardScreen: React.FC = () => {
   const { exit } = useApp();
@@ -87,8 +88,8 @@ function handleGlobalInput({
   input: string;
 }) {
   if (navigation.focusedPanel === 'left') {
-    if (key.upArrow) app.moveGlobalMenu(-1, globalMenuItems.length);
-    if (key.downArrow) app.moveGlobalMenu(1, globalMenuItems.length);
+    if (key.upArrow) app.moveGlobalMenu(-1, GLOBAL_MENU_ITEM_IDS.length);
+    if (key.downArrow) app.moveGlobalMenu(1, GLOBAL_MENU_ITEM_IDS.length);
     if (key.return && navigation.globalMenuIndex === GLOBAL_MENU_CREATE_SERVER_INDEX) app.openCreateServerWizard();
     return;
   }
@@ -148,15 +149,15 @@ function handleServerInput({
   if (navigation.focusedPanel !== 'left') {
     const serverStore = useServersStore.getState();
     const server = serverStore.servers.find((candidate) => candidate.id === serverStore.selectedServerId);
-    const selectedPanel = serverMenuItems[navigation.serverMenuIndex]?.id;
+    const selectedPanel = SERVER_MENU_IDS[navigation.serverMenuIndex]?.id;
     if (server && selectedPanel) {
       handleDashboardPanelInput({ app, pendingStore, input, key, server, panel: selectedPanel });
     }
     return;
   }
 
-  if (key.upArrow) app.moveServerMenu(-1, serverMenuItems.length);
-  if (key.downArrow) app.moveServerMenu(1, serverMenuItems.length);
+  if (key.upArrow) app.moveServerMenu(-1, SERVER_MENU_IDS.length);
+  if (key.downArrow) app.moveServerMenu(1, SERVER_MENU_IDS.length);
   if (key.return && navigation.serverMenuIndex === BACK_TO_SERVERS_INDEX) {
     if (pendingChangesCount > 0) {
       app.openPendingChangesModal();
@@ -210,7 +211,7 @@ async function confirmPendingChangesModalAction(app: ReturnType<typeof useAppSto
   if (action === 'discard') {
     const inventory = getLocalInventoryService();
     if (!inventory) {
-      app.setPendingChangesModalError('Inventory service unavailable.');
+      app.setPendingChangesModalError(i18next.t('status.inventoryUnavailable'));
       return;
     }
 
@@ -227,7 +228,7 @@ async function confirmPendingChangesModalAction(app: ReturnType<typeof useAppSto
 
   const inventory = getLocalInventoryService();
   if (!inventory) {
-    app.setPendingChangesModalError('Inventory service unavailable.');
+    app.setPendingChangesModalError(i18next.t('status.inventoryUnavailable'));
     return;
   }
 
@@ -235,8 +236,8 @@ async function confirmPendingChangesModalAction(app: ReturnType<typeof useAppSto
 
   try {
     const result = await service.applyAllAsync({ changes: pendingStore.changes, passphrase: app.pendingChangesModal.passphraseInput });
-    app.setPendingChangesModalResult(`Applied ${result.impact.total} changes in ${result.steps.length} steps.`);
+    app.setPendingChangesModalResult(i18next.t('pendingChanges.result.applied'));
   } catch (error) {
-    app.setPendingChangesModalError(error instanceof PendingChangeDecryptError ? 'Invalid passphrase. Back to edit or discard buffer.' : 'Could not apply pending changes.');
+    app.setPendingChangesModalError(error instanceof PendingChangeDecryptError ? i18next.t('pendingChanges.errors.invalidPassphrase') : i18next.t('pendingChanges.errors.couldNotApply'));
   }
 }
